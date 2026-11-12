@@ -16,11 +16,6 @@ export const StatusDot = ({ percent, min }: { percent: number; min: number }) =>
   <span className={`dot ${STATUS[attendanceStatus(percent, min)].dot}`} aria-hidden />
 );
 
-const ADVICE = { safe: { label: "OK to skip", cls: "tag-ok" }, risky: { label: "Risky", cls: "tag-warn" }, must: { label: "Don't skip", cls: "tag-bad" } } as const;
-/** Whether skipping this class is safe. Renders nothing for non-credit sessions. */
-export const AdviceTag = ({ advice }: { advice: keyof typeof ADVICE | null }) =>
-  advice ? <span className={`tag ${ADVICE[advice].cls}`}>{ADVICE[advice].label}</span> : null;
-
 export const ClassroomLink = ({ url, label = "Open in Classroom" }: { url?: string | null; label?: string }) =>
   url && isClassroomUrl(url) ? <a href={url} target="_blank" rel="noreferrer" className="link">{label} ↗</a> : null;
 
