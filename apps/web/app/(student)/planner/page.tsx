@@ -1,6 +1,9 @@
-import { nowMinutesIST, planStudy, prettyDate } from "@classpilot/core";
+import { nowMinutesIST, planStudy, prettyDate, shortName } from "@classpilot/core";
+import { Empty, SectionHead } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
 import { addDeadline, deleteDeadline } from "./actions";
+
+const HOURS = { exam: 4, quiz: 2, assignment: 2 } as const;
 
 export default async function Planner() {
   const d = await loadStudentData();
@@ -9,53 +12,72 @@ export default async function Planner() {
   const name = (c: string | null) => d.stats.find((s) => s.code === c)?.name;
   const days = [...new Set(blocks.map((b) => b.date))];
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Study planner</h1>
-        <p className="text-sm text-muted">Add a deadline. ClassPilot fits study blocks into your free periods before it, with no clashes with classes, breaks or lunch, and at most 3 hours a day.</p>
-        <form action={addDeadline} className="card p-4 space-y-3">
-          <input name="title" required placeholder="e.g. DBMS quiz 2" className="input" />
-          <div className="grid grid-cols-2 gap-2">
-            <select name="course" className="input"><option value="">No subject</option>{d.courses.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select>
-            <select name="kind" className="input"><option value="quiz">Quiz (2h)</option><option value="assignment">Assignment (2h)</option><option value="exam">Exam (4h)</option></select>
-          </div>
-          <input name="due" type="date" required min={d.today} className="input" />
-          <button className="btn">Add deadline</button>
-        </form>
-        <ul className="card divide-y divide-line">
-          {upcoming.length === 0 && <li className="p-4 text-sm text-muted">No upcoming deadlines.</li>}
-          {upcoming.map((x) => (
-            <li key={x.id} className="p-3 flex items-center gap-2 text-sm">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{x.title}</p>
-                <p className="text-xs text-muted">{prettyDate(x.due)} · {x.kind}{name(x.courseCode) ? ` · ${name(x.courseCode)}` : ""}{x.scope === "class" ? " · from teacher" : ""}</p>
+    <div className="space-y-12">
+      <section aria-labelledby="pl-h">
+        <p className="label mb-3">Deadlines → study time</p>
+        <h1 id="pl-h" className="display text-[38px] md:text-[56px]">Study planner</h1>
+        <p className="mt-2 text-ink-2 text-[17px] max-w-2xl">Study time goes into free periods before each deadline, never over classes, breaks or lunch, and at most three hours a day. Earliest deadline first.</p>
+      </section>
+
+      <div className="grid gap-10 lg:grid-cols-[400px_1fr]">
+        <div className="space-y-8">
+          <section aria-labelledby="add-h">
+            <SectionHead index="01" id="add-h" title="Add a deadline" />
+            <form action={addDeadline} className="folio p-5 space-y-4">
+              <div className="field"><label htmlFor="dl-title" className="label">Title</label><input id="dl-title" name="title" required maxLength={120} placeholder="DBMS quiz 2" className="input" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="field"><label htmlFor="dl-course" className="label">Subject</label>
+                  <select id="dl-course" name="course" className="input"><option value="">None</option>{d.courses.map((c) => <option key={c.code} value={c.code}>{shortName(c.name)}</option>)}</select></div>
+                <div className="field"><label htmlFor="dl-kind" className="label">Type</label>
+                  <select id="dl-kind" name="kind" className="input"><option value="quiz">Quiz · 2 h</option><option value="assignment">Assignment · 2 h</option><option value="exam">Exam · 4 h</option></select></div>
               </div>
-              {x.scope === "personal" && <form action={deleteDeadline.bind(null, x.id)}><button className="text-xs text-muted hover:text-rose-600">Remove</button></form>}
-            </li>
+              <div className="field"><label htmlFor="dl-due" className="label">Due</label><input id="dl-due" name="due" type="date" required min={d.today} className="input" /></div>
+              <button className="btn w-full">Add deadline</button>
+            </form>
+          </section>
+
+          <section aria-labelledby="dl-h">
+            <SectionHead index="02" id="dl-h" title="Deadlines" meta={`${upcoming.length} upcoming`} />
+            {upcoming.length === 0 ? <Empty>No upcoming deadlines.</Empty> : (
+              <ul className="folio divide-y divide-line">
+                {upcoming.map((x) => (
+                  <li key={x.id} className="px-4 py-3 flex items-center gap-3">
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[17px] truncate">{x.title}</span>
+                      <span className="mono text-[11px] text-muted">{prettyDate(x.due)} · {x.kind} · {HOURS[x.kind]} h{name(x.courseCode) ? ` · ${shortName(name(x.courseCode)!)}` : ""}</span>
+                    </span>
+                    {x.scope === "personal"
+                      ? <form action={deleteDeadline.bind(null, x.id)}><button className="link min-h-11 px-1">Remove</button></form>
+                      : <span className="tag">From teacher</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <section aria-labelledby="plan-h">
+          <SectionHead index="03" id="plan-h" title="Your plan" meta="Next 14 days" />
+          {unplaced.map((u) => (
+            <p key={u.deadlineId} className="mb-3 px-4 py-3 border border-bad text-bad text-[15px]">
+              Not enough free time for “{upcoming.find((x) => x.id === u.deadlineId)?.title}”: {u.hoursShort} h short.
+            </p>
           ))}
-        </ul>
-      </div>
-      <div className="space-y-3">
-        <p className="label">Your plan</p>
-        {unplaced.map((u) => (
-          <p key={u.deadlineId} className="text-sm rounded-lg px-3 py-2 bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-            Not enough free time for “{upcoming.find((x) => x.id === u.deadlineId)?.title}”: {u.hoursShort}h short.
-          </p>
-        ))}
-        {days.length === 0 && <div className="card p-6 text-sm text-muted">Add a deadline to generate your plan.</div>}
-        {days.map((day) => (
-          <div key={day} className="card p-4">
-            <p className="font-semibold text-sm mb-2">{prettyDate(day)}</p>
-            <ul className="space-y-1.5">
-              {blocks.filter((b) => b.date === day).map((b) => (
-                <li key={b.start} className="flex gap-3 text-sm">
-                  <span className="tabular-nums text-muted w-28 shrink-0">{b.start}–{b.end}</span>
-                  <span className="font-medium">Study for {b.title}</span>
+          {days.length === 0 ? <div className="plate p-6"><Empty>Add a deadline to generate a plan.</Empty></div> : (
+            <ol className="space-y-3">
+              {days.map((day) => (
+                <li key={day} className="folio">
+                  <div className="index-band px-4 pt-3"><span className="headline text-[18px]">{day === d.today ? "Today" : prettyDate(day)}</span><span className="label">{blocks.filter((b) => b.date === day).reduce((a, b) => a + (+b.end.slice(0, 2) * 60 + +b.end.slice(3) - (+b.start.slice(0, 2) * 60 + +b.start.slice(3))), 0)} min</span></div>
+                  <ul className="px-4 py-2 divide-y divide-line">
+                    {blocks.filter((b) => b.date === day).map((b) => (
+                      <li key={b.start} className="py-2.5 flex gap-4"><span className="mono text-[12px] w-[104px] shrink-0 pt-0.5">{b.start}–{b.end}</span><span className="text-[16px]">{b.title}</span></li>
+                    ))}
+                  </ul>
                 </li>
               ))}
-            </ul>
-          </div>
-        ))}
+            </ol>
+          )}
+        </section>
       </div>
     </div>
   );

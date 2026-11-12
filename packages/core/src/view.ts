@@ -53,3 +53,19 @@ export const syncCooldownLeft = (lastSync: string | null, now: Date, cooldownSec
   const left = cooldownSec - Math.floor((now.getTime() - new Date(lastSync).getTime()) / 1000);
   return Math.max(0, left);
 };
+
+/** "Database Management System" → "DBMS", "Computer Networks Laboratory" → "CN LAB". One-word names stay whole. */
+export const shortName = (name: string): string => {
+  const words = name.toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/)
+    .filter((w) => w && !["and", "of", "the", "for", "in", "to", "a"].includes(w) && !/^(i|ii|iii|iv|v|vi)$/.test(w));
+  if (words.length < 2) return name;
+  const lab = words[words.length - 1] === "laboratory" || words[words.length - 1] === "lab";
+  const core = lab ? words.slice(0, -1) : words;
+  const acr = core.map((w) => (w === "database" ? "db" : w[0])).join("").toUpperCase();
+  return core.length < 2 ? name : lab ? `${acr} LAB` : acr;
+};
+
+export type AttendanceStatus = "clear" | "close" | "below";
+/** Neutral standing: below the minimum, within 5 points of it, or clear. */
+export const attendanceStatus = (percent: number, min: number): AttendanceStatus =>
+  percent < min * 100 ? "below" : percent < min * 100 + 5 ? "close" : "clear";

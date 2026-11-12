@@ -1,16 +1,35 @@
-import { isClassroomUrl, type Advice } from "@classpilot/core";
+import { attendanceStatus, isClassroomUrl, type AttendanceStatus } from "@classpilot/core";
 
-export const ADVICE = {
-  safe: { label: "ok to skip", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300", bar: "bg-emerald-500" },
-  risky: { label: "risky", cls: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300", bar: "bg-amber-500" },
-  must: { label: "don't skip", cls: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300", bar: "bg-rose-500" },
-} as const;
+export const pctText = (n: number) => `${n.toFixed(1)}%`;
 
-export const Chip = ({ advice }: { advice: Advice }) => (
-  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${ADVICE[advice].cls}`}>{ADVICE[advice].label}</span>
+const STATUS: Record<AttendanceStatus, { label: string; cls: string; dot: string }> = {
+  clear: { label: "Clear", cls: "tag-ok", dot: "bg-ok" },
+  close: { label: "Close to minimum", cls: "tag-warn", dot: "bg-warn" },
+  below: { label: "Below minimum", cls: "tag-bad", dot: "bg-bad" },
+};
+
+export const StatusTag = ({ percent, min }: { percent: number; min: number }) => {
+  const s = STATUS[attendanceStatus(percent, min)];
+  return <span className={`tag ${s.cls}`}>{s.label}</span>;
+};
+export const StatusDot = ({ percent, min }: { percent: number; min: number }) => (
+  <span className={`dot ${STATUS[attendanceStatus(percent, min)].dot}`} aria-hidden />
 );
 
-export const fmt = (n: number) => `${n.toFixed(1)}%`;
+export const ClassroomLink = ({ url, label = "Open in Classroom" }: { url?: string | null; label?: string }) =>
+  url && isClassroomUrl(url) ? <a href={url} target="_blank" rel="noreferrer" className="link">{label} ↗</a> : null;
 
-export const ClassroomLink = ({ url }: { url?: string }) =>
-  url && isClassroomUrl(url) ? <a href={url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-accent hover:underline">Open in Classroom ↗</a> : null;
+/** Section header: mono index tag, display title, optional right-hand meta. */
+export const SectionHead = ({ index, title, meta, id }: { index: string; title: string; meta?: React.ReactNode; id?: string }) => (
+  <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5">
+    <div>
+      <p className="flex items-center gap-2 mb-1.5"><span className="tag tag-ink">{index}</span></p>
+      <h2 id={id} className="headline text-[26px] md:text-[30px]">{title}</h2>
+    </div>
+    {meta && <div className="label">{meta}</div>}
+  </div>
+);
+
+export const Empty = ({ children }: { children: React.ReactNode }) => (
+  <p className="text-ink-2 italic">{children}</p>
+);
