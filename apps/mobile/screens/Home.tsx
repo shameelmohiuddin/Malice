@@ -1,5 +1,5 @@
 import { ScrollView, Text, View, Linking, Pressable } from "react-native";
-import { classAdvice, costOfMiss, mustAttend, overall, pct, projection, safeToMiss, parseHHMM, prettyDate, todayIST } from "@bunk/core";
+import { isClassroomUrl, classAdvice, costOfMiss, mustAttend, overall, pct, projection, safeToMiss, parseHHMM, prettyDate, todayIST } from "@bunk/core";
 import type { Bundle } from "../lib/sync";
 import { ADV, C, pctText, s } from "./theme";
 
@@ -47,7 +47,7 @@ export function Home({ b }: { b: Bundle }) {
             </Text>
             <Text style={s.muted}>Skip next: {pctText(c.before)} → {pctText(c.after)} (−{c.drop.toFixed(1)}%)</Text>
             <Text style={s.muted}>By semester end: can miss {pr.canMissRemaining} of {pr.remaining} left</Text>
-            {b.classroom[st.code] && <Pressable onPress={() => Linking.openURL(b.classroom[st.code])}><Text style={{ color: C.accent, fontWeight: "700", marginTop: 4 }}>Open in Classroom ↗</Text></Pressable>}
+            {isClassroomUrl(b.classroom[st.code]) && <Pressable onPress={() => Linking.openURL(b.classroom[st.code])}><Text style={{ color: C.accent, fontWeight: "700", marginTop: 4 }}>Open in Classroom ↗</Text></Pressable>}
           </View>
         );
       })}

@@ -1,4 +1,4 @@
-import { addDays, mergeOverrides, todayIST, type AssistantData, type CourseStats } from "@bunk/core";
+import { addDays, adjustPlanned, mergeOverrides, todayIST, type AssistantData, type CourseStats } from "@bunk/core";
 import { supabase } from "./supabase";
 import { getCache, putCache } from "./db";
 
@@ -20,12 +20,13 @@ export const syncDown = async (userId: string): Promise<void> => {
   ]);
   for (const r of [stats, courses, tt, ov, ev, dl]) if (r.error) throw r.error;
   const names = new Map((courses.data ?? []).map((c: any) => [c.code, c.name]));
+  const overrides = (ov.data ?? []).map((r: any) => ({ id: r.id, courseCode: r.course_code, date: r.date, start: r.start, end: r.end, action: r.action, room: r.room }));
   const bundle: Bundle = {
-    profile,
-    stats: (stats.data ?? []).map((r: any): CourseStats => ({ code: r.course_code, name: names.get(r.course_code) ?? r.course_code, present: r.present, held: r.held, plannedTotal: r.planned_total })),
+    profile, min: Number(profile.min_attendance ?? 0.75),
+    stats: adjustPlanned((stats.data ?? []).map((r: any): CourseStats => ({ code: r.course_code, name: names.get(r.course_code) ?? r.course_code, present: r.present, held: r.held, plannedTotal: r.planned_total })), overrides, today),
     timetable: mergeOverrides(
       (tt.data ?? []).map((r: any) => ({ date: r.date, start: r.start, end: r.end, courseCode: r.course_code, kind: r.kind, room: r.room, cancelled: r.cancelled, extra: false })),
-      (ov.data ?? []).map((r: any) => ({ id: r.id, courseCode: r.course_code, date: r.date, start: r.start, end: r.end, action: r.action, room: r.room })),
+      overrides,
     ),
     events: (ev.data ?? []).map((r: any) => ({ id: r.id, title: r.title, start: r.start_date, end: r.end_date, category: r.category, isHoliday: r.is_holiday, cancelled: r.cancelled })),
     deadlines: (dl.data ?? []).filter((r: any) => r.scope === "personal" || !r.section || r.section === section)

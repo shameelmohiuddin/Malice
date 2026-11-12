@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { ask, HELP, nowMinutesIST, todayIST } from "@bunk/core";
+import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST } from "@bunk/core";
 import type { Bundle } from "../lib/sync";
 import { C, s } from "./theme";
 
@@ -14,11 +14,11 @@ export function Assistant({ b, go }: { b: Bundle; go: (tab: string) => void }) {
   const send = (q: string) => {
     if (!q.trim()) return;
     const r = ask(q, b, todayIST(), nowMinutesIST());
-    const retry = r.options && r.text.toLowerCase().includes("which") || r.text.includes("Pick") ? q : undefined;
+    const retry = r.options && /which|pick/i.test(r.text) ? q : undefined;
     setMsgs((m) => [...m, { me: true, text: q }, { me: false, text: r.text, options: r.options, retry }]);
     setText("");
     if (r.navigate && TABS[r.navigate]) go(TABS[r.navigate]);
-    if (r.openUrl) Linking.openURL(r.openUrl);
+    if (r.openUrl && isClassroomUrl(r.openUrl)) Linking.openURL(r.openUrl);
   };
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>

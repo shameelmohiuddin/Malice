@@ -20,8 +20,10 @@ export const erpLogin = async (usn: string, password: string): Promise<string> =
   } catch (e) { throw new ErpDownError(String(e)); }
   if (res.ok) return (await res.json()).access_token as string;
   const body = await res.json().catch(() => ({}));
-  if (body.error === "invalid_grant" && /invalid user credentials/i.test(body.error_description ?? "")) throw new ErpAuthError("Wrong USN or password");
+  const notAllowed = body.error === "unauthorized_client" || /not allowed|not enabled/i.test(body.error_description ?? "");
+  if (body.error === "invalid_grant" && !notAllowed) throw new ErpAuthError(body.error_description || "Wrong USN or password");
   if (res.status >= 500) throw new ErpDownError(`ERP returned ${res.status}`);
+  if (!notAllowed) throw new ErpAuthError(body.error_description || `ERP login failed (${res.status})`);
   return browserLogin(usn, password);
 };
 

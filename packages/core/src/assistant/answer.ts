@@ -9,6 +9,7 @@ export type AssistantData = {
   events: CalendarEvent[];
   deadlines: Deadline[];
   classroom: Record<string, string>;
+  min?: number; // student minimum, default 0.75
 };
 export type Reply = { text: string; navigate?: string; openUrl?: string; options?: string[] };
 
@@ -28,32 +29,34 @@ export const HELP = [
   "Open calendar",
 ];
 
-const canSkipLine = (s: CourseStats) => {
-  const n = safeToMiss(s.present, s.held);
-  if (n > 0) return `You can skip ${n} more ${s.name} ${n === 1 ? "class" : "classes"} and stay ≥75% (now ${P(pct(s.present, s.held))}).`;
-  const need = mustAttend(s.present, s.held);
+const canSkipLine = (s: CourseStats, min: number) => {
+  const m = `${Math.round(min * 100)}%`;
+  const n = safeToMiss(s.present, s.held, min);
+  if (n > 0) return `You can skip ${n} more ${s.name} ${n === 1 ? "class" : "classes"} and stay ≥${m} (now ${P(pct(s.present, s.held))}).`;
+  const need = mustAttend(s.present, s.held, min);
   return need > 0
-    ? `Don't skip ${s.name}. You're at ${P(pct(s.present, s.held))} and need to attend the next ${plural(need, "class")} to get back to 75%.`
+    ? `Don't skip ${s.name}. You're at ${P(pct(s.present, s.held))} and need to attend the next ${plural(need, "class")} to get back to ${m}.`
     : `You can't skip any more ${s.name} classes. One miss takes you to ${P(costOfMiss(s.present, s.held).after)}.`;
 };
 
 const ADVICE_WORD = { safe: "ok to skip", risky: "risky", must: "don't skip" } as const;
 
 export const answer = (intent: Intent, data: AssistantData, today: string, nowMin = 0): Reply => {
+  const min = data.min ?? 0.75;
   const stat = intent.subject ? data.stats.find((s) => s.code === intent.subject) : undefined;
   const nameOf = (code: string | null) => data.stats.find((s) => s.code === code)?.name ?? code ?? "Class";
 
   switch (intent.kind) {
     case "attendance": {
-      if (stat) return { text: `${stat.name}: ${P(pct(stat.present, stat.held))} (${stat.present}/${stat.held}). ${canSkipLine(stat)}` };
+      if (stat) return { text: `${stat.name}: ${P(pct(stat.present, stat.held))} (${stat.present}/${stat.held}). ${canSkipLine(stat, min)}` };
       const o = overall(data.stats);
       const lines = [...data.stats].sort((a, b) => pct(a.present, a.held) - pct(b.present, b.held))
         .map((s) => `• ${s.name}: ${P(pct(s.present, s.held))}`);
       return { text: [`Overall: ${P(pct(o.present, o.held))} (${o.present}/${o.held}).`, ...lines].join("\n") };
     }
     case "can_skip": {
-      if (stat) return { text: canSkipLine(stat) };
-      return { text: data.stats.map((s) => `• ${s.name}: ${safeToMiss(s.present, s.held)} more`).join("\n") };
+      if (stat) return { text: canSkipLine(stat, min) };
+      return { text: data.stats.map((s) => `• ${s.name}: ${safeToMiss(s.present, s.held, min)} more`).join("\n") };
     }
     case "cost_of_skip": {
       if (!stat) return { text: "Which subject?", options: data.stats.map((s) => s.name) };
@@ -70,7 +73,7 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
         const s = data.stats.find((x) => x.code === t.courseCode);
         if (!s) return `• ${t.start} ${nameOf(t.courseCode)}`;
         const dl = data.deadlines.some((d) => d.due === date && d.courseCode === s.code);
-        const adv = classAdvice(s, dl);
+        const adv = classAdvice(s, dl, min);
         const why = dl ? "deadline that day" : `skipping drops you to ${P(costOfMiss(s.present, s.held).after)}`;
         return `• ${t.start} ${s.name}: ${ADVICE_WORD[adv]} (${why})`;
       });

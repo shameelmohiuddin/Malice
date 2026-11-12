@@ -1,5 +1,5 @@
 import "server-only";
-import { addDays, mergeOverrides, todayIST, type AssistantData, type CalendarEvent, type CourseStats, type Deadline, type ScheduleOverride, type TimetableSlot } from "@bunk/core";
+import { addDays, adjustPlanned, mergeOverrides, todayIST, type AssistantData, type CalendarEvent, type CourseStats, type Deadline, type ScheduleOverride, type TimetableSlot } from "@bunk/core";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { Role } from "@/lib/roles";
@@ -42,11 +42,12 @@ export const loadStudentData = async (): Promise<StudentData> => {
   const s: CourseStats[] = (stats.data ?? []).map((r) => ({ code: r.course_code, name: names.get(r.course_code) ?? r.course_code, present: r.present, held: r.held, plannedTotal: r.planned_total }))
     .sort((a, b) => a.name.localeCompare(b.name));
   const mine = new Set(s.map((x) => x.code));
+  const overrides = (ov.data ?? []).map(toOverride);
   return {
     profile, today,
-    stats: s,
+    stats: adjustPlanned(s, overrides, today),
     courses: (courses.data ?? []).filter((c) => mine.has(c.code)).map((c) => ({ code: c.code, name: c.name })),
-    timetable: mergeOverrides((tt.data ?? []).map(toSlot), (ov.data ?? []).map(toOverride)),
+    timetable: mergeOverrides((tt.data ?? []).map(toSlot), overrides),
     events: (ev.data ?? []).map(toEvent),
     deadlines: (dl.data ?? []).filter((d) => d.scope === "personal" || !d.section || d.section === section).map(toDeadline),
     classroom: Object.fromEntries((courses.data ?? []).filter((c) => c.classroom_url).map((c) => [c.code, c.classroom_url])),

@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ask, HELP, nowMinutesIST, todayIST, type AssistantData } from "@bunk/core";
+import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST, type AssistantData } from "@bunk/core";
 
-type Msg = { from: "me" | "bot"; text: string; options?: string[] };
+type Msg = { from: "me" | "bot"; text: string; options?: string[]; retry?: string };
 
 export function Assistant({ data }: { data: AssistantData }) {
   const [open, setOpen] = useState(false);
@@ -21,10 +21,11 @@ export function Assistant({ data }: { data: AssistantData }) {
   const send = (q: string) => {
     if (!q.trim()) return;
     const r = ask(q, data, todayIST(), nowMinutesIST());
-    setMsgs((m) => [...m, { from: "me", text: q }, { from: "bot", text: r.text, options: r.options }]);
+    const retry = r.options && /which|pick/i.test(r.text) ? q : undefined;
+    setMsgs((m) => [...m, { from: "me", text: q }, { from: "bot", text: r.text, options: r.options, retry }]);
     setText("");
     if (r.navigate) router.push(r.navigate);
-    if (r.openUrl) window.open(r.openUrl, "_blank", "noopener");
+    if (r.openUrl && isClassroomUrl(r.openUrl)) window.open(r.openUrl, "_blank", "noopener");
   };
 
   const listen = () => {
@@ -57,7 +58,7 @@ export function Assistant({ data }: { data: AssistantData }) {
                 <div className={`inline-block max-w-[90%] text-left whitespace-pre-line rounded-2xl px-3 py-2 ${m.from === "me" ? "bg-accent text-white" : "bg-bg border border-line"}`}>{m.text}</div>
                 {m.options && (
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {m.options.map((o) => <button key={o} onClick={() => send(m.text.startsWith("Which") || m.text.includes("Pick") || m.text.includes("which") ? `${msgs.filter((x) => x.from === "me").at(-1)?.text ?? ""} ${o}` : o)} className="text-xs px-2.5 py-1 rounded-full border border-line hover:border-accent">{o}</button>)}
+                    {m.options.map((o) => <button key={o} onClick={() => send(m.retry ? `${m.retry} ${o}` : o)} className="text-xs px-2.5 py-1 rounded-full border border-line hover:border-accent">{o}</button>)}
                   </div>
                 )}
               </div>

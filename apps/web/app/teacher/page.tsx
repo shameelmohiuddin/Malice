@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addDays, prettyDate, todayIST } from "@bunk/core";
+import { addDays, isISODate, prettyDate, todayIST } from "@bunk/core";
 import { Nav } from "@/components/Nav";
 import { getSession } from "@/lib/data";
 import { redirect } from "next/navigation";
@@ -9,8 +9,8 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
   const { supabase: sb, profile } = await getSession();
   if (profile.role === "student") redirect("/dashboard");
   const sp = await searchParams;
-  const date = sp.date ?? todayIST();
-  const section = sp.section ?? "5CS3";
+  const date = isISODate(sp.date) ? sp.date : todayIST();
+  const section = /^[A-Za-z0-9-]{1,20}$/.test(sp.section ?? "") ? sp.section! : "5CS3";
   const [tt, ov, courses, events, dls] = await Promise.all([
     sb.from("timetable").select("date,start,end,course_code,room").eq("section", section).eq("date", date).not("course_code", "is", null).order("start"),
     sb.from("schedule_overrides").select("*").eq("section", section).gte("date", todayIST()).order("date"),

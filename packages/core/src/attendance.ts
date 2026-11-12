@@ -2,6 +2,7 @@ import type { Advice, CourseStats } from "./types";
 
 export const MIN_ATTENDANCE = 0.75;
 const r1 = (x: number) => Math.round(x * 10) / 10;
+const validMin = (min: number) => Number.isFinite(min) && min > 0 && min < 1;
 
 export const pct = (present: number, held: number): number =>
   held === 0 ? 100 : r1((present / held) * 100);
@@ -13,10 +14,10 @@ export const costOfMiss = (present: number, held: number) => {
 };
 
 export const safeToMiss = (present: number, held: number, min = MIN_ATTENDANCE): number =>
-  Math.max(0, Math.floor((present - min * held) / min + 1e-9));
+  !validMin(min) ? 0 : Math.max(0, Math.floor((present - min * held) / min + 1e-9));
 
 export const mustAttend = (present: number, held: number, min = MIN_ATTENDANCE): number =>
-  Math.max(0, Math.ceil((min * held - present) / (1 - min) - 1e-9));
+  !validMin(min) ? 0 : Math.max(0, Math.ceil((min * held - present) / (1 - min) - 1e-9));
 
 export const projection = (s: CourseStats, min = MIN_ATTENDANCE) => {
   const total = Math.max(s.plannedTotal, s.held);

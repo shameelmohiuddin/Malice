@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { addDays, classAdvice, parseHHMM, prettyDate, weekday } from "@bunk/core";
+import { addDays, isISODate, classAdvice, parseHHMM, prettyDate, weekday } from "@bunk/core";
 import { Chip, ClassroomLink } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
 
 export default async function Timetable({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
   const d = await loadStudentData();
   const { week } = await searchParams;
-  const base = week ?? d.today;
+  const base = isISODate(week) ? week : d.today;
   const monday = addDays(base, -((weekday(base) + 6) % 7));
   const days = Array.from({ length: 6 }, (_, i) => addDays(monday, i));
   const min = Number(d.profile.min_attendance ?? 0.75);

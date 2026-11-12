@@ -1,4 +1,4 @@
-import type { Advice } from "@bunk/core";
+import { isClassroomUrl, type Advice } from "@bunk/core";
 
 export const ADVICE = {
   safe: { label: "ok to skip", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300", bar: "bg-emerald-500" },
@@ -13,4 +13,4 @@ export const Chip = ({ advice }: { advice: Advice }) => (
 export const fmt = (n: number) => `${n.toFixed(1)}%`;
 
 export const ClassroomLink = ({ url }: { url?: string }) =>
-  url ? <a href={url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-accent hover:underline">Open in Classroom ↗</a> : null;
+  url && isClassroomUrl(url) ? <a href={url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-accent hover:underline">Open in Classroom ↗</a> : null;

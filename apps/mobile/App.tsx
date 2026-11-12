@@ -45,6 +45,7 @@ export default function App() {
   const [online, setOnline] = useState(true);
   const [tab, setTab] = useState("home");
   const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -60,7 +61,8 @@ export default function App() {
   const sync = useCallback(async () => {
     if (!session) return;
     setSyncing(true);
-    try { await syncDown(session.user.id); } catch { /* offline: keep cache */ }
+    try { await syncDown(session.user.id); setSyncError(null); }
+    catch (e) { setSyncError((e as Error).message || "Couldn't reach the server"); /* keep cached data */ }
     await refresh();
     setSyncing(false);
   }, [session, refresh]);
@@ -87,7 +89,14 @@ export default function App() {
             </View>
             {!online && <Text style={{ backgroundColor: "#fef3c7", color: "#92400e", padding: 8, textAlign: "center", fontWeight: "600" }}>Offline · last synced {time}</Text>}
             <View style={{ flex: 1 }}>
-              {!bundle ? <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24 }}><ActivityIndicator /><Text style={s.muted}>Loading your data…</Text></View>
+              {!bundle ? (
+                <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 12 }}>
+                  {syncing || !syncError ? <><ActivityIndicator /><Text style={s.muted}>Loading your data…</Text></> : <>
+                    <Text style={{ color: C.must, textAlign: "center" }}>Couldn't load your data. Connect to the internet once to sync.{"\n"}{syncError}</Text>
+                    <Pressable onPress={sync} style={s.btn}><Text style={s.btnText}>Retry</Text></Pressable>
+                  </>}
+                </View>
+              )
                 : tab === "home" ? <Home b={bundle} />
                 : tab === "timetable" ? <Timetable b={bundle} />
                 : tab === "calendar" ? <Calendar b={bundle} />

@@ -40,4 +40,13 @@ export const toHHMM = (min: number): string =>
 export const daysBetween = (a: string, b: string): number =>
   Math.round((toUTC(b).getTime() - toUTC(a).getTime()) / 86_400_000);
 
+export const isISODate = (s: unknown): s is string => {
+  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  return fmt(toUTC(s)) === s;
+};
+
+export const isClassroomUrl = (s: unknown): s is string => {
+  try { const u = new URL(String(s)); return u.protocol === "https:" && u.hostname === "classroom.google.com"; } catch { return false; }
+};
+
 export const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];

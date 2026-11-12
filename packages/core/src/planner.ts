@@ -60,6 +60,14 @@ export const planStudy = (
   return { blocks, unplaced };
 };
 
+/** Teacher cancels/extras from `today` on change how many classes are still planned. */
+export const adjustPlanned = <S extends { code: string; plannedTotal: number; held: number }>(stats: S[], overrides: ScheduleOverride[], today: string): S[] =>
+  stats.map((s) => {
+    const delta = overrides.filter((o) => o.courseCode === s.code && o.date >= today)
+      .reduce((d, o) => d + (o.action === "extra" ? 1 : -1), 0);
+    return { ...s, plannedTotal: Math.max(s.held, s.plannedTotal + delta) };
+  });
+
 /** Apply teacher one-off changes: cancel marks the matching slot, extra adds a slot. */
 export const mergeOverrides = (slots: TimetableSlot[], overrides: ScheduleOverride[]): TimetableSlot[] => {
   const out = slots.map((s) => ({ ...s }));
