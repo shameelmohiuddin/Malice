@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { addDays, isISODate, prettyDate, shortName, todayIST } from "@classpilot/core";
+import { addDays, isISODate, nowMinutesIST, parseHHMM, prettyDate, shortName, todayIST } from "@classpilot/core";
 import { Nav } from "@/components/Nav";
 import { SectionHead, Empty } from "@/components/ui";
 import { getSession } from "@/lib/data";
@@ -53,7 +53,9 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
                         <span className="block text-[13px] text-ink-2 truncate">{c.courseName}{c.room ? ` · ${c.room}` : ""}</span>
                       </span>
                       {c.extra && <span className="tag tag-ink">Extra</span>}
-                      {c.cancelled || c.extra
+                      {(date < todayIST() || (date === todayIST() && parseHHMM(c.end) <= nowMinutesIST())) && !c.cancelled
+                        ? <span className="tag">Done</span>
+                        : c.cancelled || c.extra
                         ? <form action={undoOverride.bind(null, c.overrideId)}><button className="btn btn-line">Undo</button></form>
                         : <form action={cancelClass.bind(null, section, c.courseCode, date, c.start, c.end)}><button className="btn btn-bad">Cancel</button></form>}
                     </li>
@@ -101,7 +103,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
                 <input type="hidden" name="section" value={section} />
                 <div className="field"><label htmlFor="d-title" className="label">Title</label><input id="d-title" name="title" required maxLength={120} placeholder="DBMS quiz 3" className="input" /></div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 [&>*]:min-w-0 [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-1">
-                  <div className="field"><label htmlFor="d-course" className="label">Subject</label><select id="d-course" name="course" className="input"><option value="">Whole class (no subject)</option>{courses.data?.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></div>
+                  <div className="field"><label htmlFor="d-course" className="label">Subject</label><select id="d-course" name="course" className="input"><option value="">Whole class</option>{courses.data?.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></div>
                   <div className="field"><label htmlFor="d-kind" className="label">Type</label><select id="d-kind" name="kind" className="input"><option value="quiz">Quiz</option><option value="assignment">Assignment</option><option value="exam">Exam</option></select></div>
                   <div className="field"><label htmlFor="d-due" className="label">Due</label><input id="d-due" name="due" type="date" required min={todayIST()} className="input" /></div>
                 </div>

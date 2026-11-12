@@ -1,5 +1,5 @@
 import "server-only";
-import { isClassroomUrl, isISODate, overlaps } from "@classpilot/core";
+import { isClassroomUrl, isISODate, nowMinutesIST, overlaps, parseHHMM, todayIST } from "@classpilot/core";
 import { dbError, NotFoundError } from "@/lib/errors";
 import { requireStaff } from "@/lib/roles";
 import type { Ctx } from "@/lib/data";
@@ -42,6 +42,9 @@ export const teacher = {
   async cancelClass(ctx: Ctx, input: unknown) {
     const { sb, uid } = staff(ctx);
     const v = validateCancel(input);
+    const today = todayIST();
+    if (v.date < today || (v.date === today && parseHHMM(v.end) <= nowMinutesIST()))
+      throw new ValidationError("That class has already happened, so it can't be cancelled");
     const day = await sectionDay(sb, v.section, v.date);
     if (!day.classes.some((c) => c.start === v.start && c.course_code === v.courseCode))
       throw new ValidationError(`There's no ${v.courseCode} class at ${v.start} on ${v.date} for ${v.section}`);
