@@ -1,4 +1,4 @@
-import { ask, nowMinutesIST } from "@bunk/core";
+import { ask, nowMinutesIST } from "@classpilot/core";
 import { api, body, okJson } from "@/lib/api";
 import { loadStudentDataFor } from "@/lib/data";
 import { ValidationError } from "@/lib/validate";

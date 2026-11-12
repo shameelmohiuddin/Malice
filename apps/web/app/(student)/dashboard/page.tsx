@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { classAdvice, overall, pct, parseHHMM, prettyDate } from "@bunk/core";
+import { classAdvice, overall, pct, parseHHMM, prettyDate } from "@classpilot/core";
 import { AttendanceCard } from "@/components/AttendanceCard";
 import { Chip, ClassroomLink, fmt } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";

@@ -2,7 +2,7 @@ import * as SQLite from "expo-sqlite";
 
 // Offline cache: one row per synced table, holding its rows as JSON.
 let dbp: Promise<SQLite.SQLiteDatabase> | null = null;
-const db = () => (dbp ??= SQLite.openDatabaseAsync("bunksmart.db").then(async (d) => {
+const db = () => (dbp ??= SQLite.openDatabaseAsync("classpilot.db").then(async (d) => {
   await d.execAsync("create table if not exists cache (key text primary key, json text not null, updated_at text not null)");
   return d;
 }));

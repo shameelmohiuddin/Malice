@@ -1,14 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST, type AssistantData } from "@bunk/core";
+import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST, type AssistantData } from "@classpilot/core";
 
 type Msg = { from: "me" | "bot"; text: string; options?: string[]; retry?: string };
 
 export function Assistant({ data }: { data: AssistantData }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const [msgs, setMsgs] = useState<Msg[]>([{ from: "bot", text: "Hi! Ask me about your attendance, skips, classes or events.", options: HELP.slice(0, 4) }]);
+  const [msgs, setMsgs] = useState<Msg[]>([{ from: "bot", text: "Ask about attendance, skips, classes or events.", options: HELP.slice(0, 4) }]);
   const [listening, setListening] = useState(false);
   const [voiceOK, setVoiceOK] = useState(false);
   const router = useRouter();

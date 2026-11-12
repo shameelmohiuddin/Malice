@@ -1,5 +1,5 @@
 import "server-only";
-import { isClassroomUrl, isISODate } from "@bunk/core";
+import { isClassroomUrl, isISODate } from "@classpilot/core";
 import { requireStaff } from "@/lib/roles";
 import type { Ctx } from "@/lib/data";
 import { ValidationError, validateDeadline, validateEvent, validateExtra, validateCancel } from "@/lib/validate";

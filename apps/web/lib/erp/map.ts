@@ -1,4 +1,4 @@
-import { addDays, weekday, type CalendarEvent, type CourseStats, type TimetableSlot } from "@bunk/core";
+import { addDays, weekday, type CalendarEvent, type CourseStats, type TimetableSlot } from "@classpilot/core";
 import type { ErpRaw } from "./types";
 
 export type LogRow = { erpLogId: number; courseCode: string; date: string; start: string; end: string; status: "PRESENT" | "ABSENT" };

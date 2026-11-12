@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addDays, isISODate, prettyDate, todayIST } from "@bunk/core";
+import { addDays, isISODate, prettyDate, todayIST } from "@classpilot/core";
 import { Nav } from "@/components/Nav";
 import { getSession } from "@/lib/data";
 import { redirect } from "next/navigation";

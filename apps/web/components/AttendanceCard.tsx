@@ -1,4 +1,4 @@
-import { classAdvice, costOfMiss, mustAttend, pct, projection, safeToMiss, type CourseStats } from "@bunk/core";
+import { classAdvice, costOfMiss, mustAttend, pct, projection, safeToMiss, type CourseStats } from "@classpilot/core";
 import { ADVICE, Chip, ClassroomLink, fmt } from "./ui";
 
 export function AttendanceCard({ s, deadlineToday, classroom, min }: { s: CourseStats; deadlineToday: boolean; classroom?: string; min: number }) {

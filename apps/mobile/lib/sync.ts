@@ -1,4 +1,4 @@
-import { addDays, adjustPlanned, mergeOverrides, todayIST, type AssistantData, type CourseStats } from "@bunk/core";
+import { addDays, adjustPlanned, mergeOverrides, todayIST, type AssistantData, type CourseStats } from "@classpilot/core";
 import { supabase } from "./supabase";
 import { getCache, putCache } from "./db";
 

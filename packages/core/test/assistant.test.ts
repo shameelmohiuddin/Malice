@@ -34,7 +34,7 @@ describe("classify", () => {
 
 describe("ask", () => {
   it("answers", () => {
-    expect(ask("how many can i skip in fsd", D, T).text).toContain("4 more");
+    expect(ask("how many can i skip in fsd", D, T).text).toContain("next 4");
     expect(ask("what if i skip fsd", D, T).text).toContain("90.0% → 85.7%");
     expect(ask("open timetable", D, T).navigate).toBe("/timetable");
     expect(ask("open classroom for fsd", D, T).openUrl).toBe("https://classroom.google.com/c/abc");

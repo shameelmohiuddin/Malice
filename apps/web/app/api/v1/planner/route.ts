@@ -1,4 +1,4 @@
-import { nowMinutesIST, planStudy } from "@bunk/core";
+import { nowMinutesIST, planStudy } from "@classpilot/core";
 import { api, okJson } from "@/lib/api";
 import { loadStudentDataFor } from "@/lib/data";
 export const GET = api(async (ctx) => {

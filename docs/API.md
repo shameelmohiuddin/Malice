@@ -1,4 +1,4 @@
-# BunkSmart API (v1)
+# ClassPilot API (v1)
 
 This is the contract the frontend talks to. Any UI (the new design, the mobile app, or a script) only needs these endpoints.
 

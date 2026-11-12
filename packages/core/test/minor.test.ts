@@ -19,8 +19,7 @@ it("min outside (0,1) never yields NaN/Infinity", () => {
 
 it("assistant uses the student's minimum", () => {
   const r = ask("how many can i skip in fsd", { ...D, min: 0.85 }, T).text;
-  expect(r).toContain("≥85%");
-  expect(r).toContain("1 more"); // 18/20 at 85%: floor((18-17)/0.85)=1
+  expect(r).toBe("You can skip the next 1 FSD class."); // 18/20 at 85%: floor((18-17)/0.85)=1
 });
 
 it("planned totals follow teacher overrides from today on", () => {

@@ -4,10 +4,10 @@ import { adminSyncStore, supabaseAdmin } from "../lib/supabase/admin";
 import { syncUser } from "../lib/erp/sync";
 
 const USERS = [
-  { email: "admin@demo.bunk", name: "Demo Admin", role: "admin" },
-  { email: "teacher@demo.bunk", name: "Prof. Demo", role: "teacher" },
-  { email: "student1@demo.bunk", name: "Demo Student", role: "student" },
-  { email: "student2@demo.bunk", name: "Demo Student 2", role: "student" },
+  { email: "admin@demo.classpilot", name: "Demo Admin", role: "admin" },
+  { email: "teacher@demo.classpilot", name: "Prof. Demo", role: "teacher" },
+  { email: "student1@demo.classpilot", name: "Demo Student", role: "student" },
+  { email: "student2@demo.classpilot", name: "Demo Student 2", role: "student" },
 ] as const;
 
 const main = async () => {

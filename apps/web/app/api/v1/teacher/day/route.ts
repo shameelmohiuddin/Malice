@@ -1,4 +1,4 @@
-import { todayIST } from "@bunk/core";
+import { todayIST } from "@classpilot/core";
 import { api, okJson } from "@/lib/api";
 import { teacher } from "@/lib/teacher";
 /** GET ?section=5CS3&date=YYYY-MM-DD */

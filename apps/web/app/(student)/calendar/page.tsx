@@ -1,4 +1,4 @@
-import { prettyDate } from "@bunk/core";
+import { prettyDate } from "@classpilot/core";
 import { loadStudentData } from "@/lib/data";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

@@ -1,6 +1,6 @@
-# BunkSmart: Team Brief (wireframes and PPT)
+# ClassPilot: Team Brief (wireframes and PPT)
 
-**One line:** BunkSmart pulls your attendance and timetable straight from the MITE ERP. It tells you exactly which classes you can skip and which you can't, plans your study time around deadlines, and answers questions through a built-in assistant that doesn't use any AI API.
+**One line:** ClassPilot pulls your attendance and timetable straight from the MITE ERP. It tells you exactly which classes you can skip and which you can't, plans your study time around deadlines, and answers questions through a built-in assistant that doesn't use any AI API.
 
 **Problem statement:** #2, Smart Timetable Planner.
 **Users:** students (view, plan, ask) and teachers (cancel or add classes, post events and deadlines).
@@ -58,7 +58,7 @@ Status colours: **green = safe to skip, amber = risky, red = don't skip.**
 - Suggestion chips: *"Can I skip tomorrow?"*, *"DBMS attendance"*, *"Open calendar"*
 - Example exchange:
   - **You:** how many classes can I bunk in FLAT
-  - **BunkSmart:** You can skip 7 more Formal language and automata theory classes and stay ≥75% (now 92.0%).
+  - **ClassPilot:** You can skip the next 7 FLAT classes.
 - When it isn't sure, it asks back with chips: "Which subject do you mean? [Full Stack Development] [Product Development]"
 
 ### 8. Teacher Console
@@ -76,7 +76,7 @@ Status colours: **green = safe to skip, amber = risky, red = don't skip.**
 
 ## Part 2: PPT outline (8–10 slides)
 
-1. **Title:** BunkSmart, "Know exactly when you can skip, and when you can't." Team names.
+1. **Title:** ClassPilot, "Know exactly when you can skip, and when you can't." Team names.
 2. **Problem:** students don't know their real attendance standing until it's too late. The 75% rule causes stress, condonation fees and debarment. The timetable, attendance and deadlines all live in different places, and nobody tells you whether skipping this one class is safe.
 3. **Problem statement #2:** Smart Timetable Planner. We merged it with attendance because that's the real pain point on our campus.
 4. **Solution:** one screen showing per-subject attendance, a safe-to-skip count, the cost of the next miss, a semester projection, and a clash-free study plan.

@@ -1,4 +1,4 @@
-import { isClassroomUrl, type Advice } from "@bunk/core";
+import { isClassroomUrl, type Advice } from "@classpilot/core";
 
 export const ADVICE = {
   safe: { label: "ok to skip", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300", bar: "bg-emerald-500" },

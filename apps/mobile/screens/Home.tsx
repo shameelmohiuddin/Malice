@@ -1,5 +1,5 @@
 import { ScrollView, Text, View, Linking, Pressable } from "react-native";
-import { isClassroomUrl, classAdvice, costOfMiss, mustAttend, overall, pct, projection, safeToMiss, parseHHMM, prettyDate, todayIST } from "@bunk/core";
+import { isClassroomUrl, classAdvice, costOfMiss, mustAttend, overall, pct, projection, safeToMiss, parseHHMM, prettyDate, todayIST } from "@classpilot/core";
 import type { Bundle } from "../lib/sync";
 import { ADV, C, pctText, s } from "./theme";
 

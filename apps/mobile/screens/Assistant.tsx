@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST } from "@bunk/core";
+import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST } from "@classpilot/core";
 import type { Bundle } from "../lib/sync";
 import { C, s } from "./theme";
 
@@ -9,7 +9,7 @@ const TABS: Record<string, string> = { "/dashboard": "home", "/timetable": "time
 
 export function Assistant({ b, go }: { b: Bundle; go: (tab: string) => void }) {
   const [text, setText] = useState("");
-  const [msgs, setMsgs] = useState<Msg[]>([{ me: false, text: "Ask me about attendance, skips, classes or events. Works offline.", options: HELP.slice(0, 4) }]);
+  const [msgs, setMsgs] = useState<Msg[]>([{ me: false, text: "Ask about attendance, skips, classes or events.", options: HELP.slice(0, 4) }]);
   const ref = useRef<any>(null);
   const send = (q: string) => {
     if (!q.trim()) return;

@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 
-const DEMO: Record<string, string> = { student: "student1@demo.bunk", student2: "student2@demo.bunk", teacher: "teacher@demo.bunk", admin: "admin@demo.bunk" };
+const DEMO: Record<string, string> = { student: "student1@demo.classpilot", student2: "student2@demo.classpilot", teacher: "teacher@demo.classpilot", admin: "admin@demo.classpilot" };
 
 export type AuthState = { error?: string; info?: string } | null;
 export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {

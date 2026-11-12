@@ -1,4 +1,4 @@
-import { isISODate } from "@bunk/core";
+import { isISODate } from "@classpilot/core";
 
 export class ValidationError extends Error {}
 const TIME = /^\d{2}:\d{2}$/;

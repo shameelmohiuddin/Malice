@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { syncCooldownLeft } from "@bunk/core";
+import { syncCooldownLeft } from "@classpilot/core";
 import { adminSyncStore, supabaseAdmin } from "@/lib/supabase/admin";
 import { syncUser } from "@/lib/erp/sync";
 

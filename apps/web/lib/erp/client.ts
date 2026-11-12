@@ -1,4 +1,4 @@
-import { todayIST } from "@bunk/core";
+import { todayIST } from "@classpilot/core";
 import type { ApiCourse, ApiEvent, ApiTimetableEntry, ErpRaw } from "./types";
 
 const BASE = "https://erp.mite.ac.in";

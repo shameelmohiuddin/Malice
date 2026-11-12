@@ -1,4 +1,4 @@
-import { nowMinutesIST, planStudy, prettyDate } from "@bunk/core";
+import { nowMinutesIST, planStudy, prettyDate } from "@classpilot/core";
 import { loadStudentData } from "@/lib/data";
 import { addDeadline, deleteDeadline } from "./actions";
 
@@ -12,7 +12,7 @@ export default async function Planner() {
     <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">Study planner</h1>
-        <p className="text-sm text-muted">Add a deadline. BunkSmart fits study blocks into your free periods before it, with no clashes with classes, breaks or lunch, and at most 3 hours a day.</p>
+        <p className="text-sm text-muted">Add a deadline. ClassPilot fits study blocks into your free periods before it, with no clashes with classes, breaks or lunch, and at most 3 hours a day.</p>
         <form action={addDeadline} className="card p-4 space-y-3">
           <input name="title" required placeholder="e.g. DBMS quiz 2" className="input" />
           <div className="grid grid-cols-2 gap-2">

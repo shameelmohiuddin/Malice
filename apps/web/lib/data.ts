@@ -1,5 +1,5 @@
 import "server-only";
-import { addDays, adjustPlanned, mergeOverrides, todayIST, type AssistantData, type CalendarEvent, type CourseStats, type Deadline, type ScheduleOverride, type TimetableSlot } from "@bunk/core";
+import { addDays, adjustPlanned, mergeOverrides, todayIST, type AssistantData, type CalendarEvent, type CourseStats, type Deadline, type ScheduleOverride, type TimetableSlot } from "@classpilot/core";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { Role } from "@/lib/roles";

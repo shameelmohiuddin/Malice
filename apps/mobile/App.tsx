@@ -16,7 +16,7 @@ import { C, s } from "./screens/theme";
 const TABS = [["home", "Home"], ["timetable", "Timetable"], ["calendar", "Calendar"], ["assistant", "Assistant"]] as const;
 
 function Login() {
-  const [email, setEmail] = useState("student1@demo.bunk");
+  const [email, setEmail] = useState("student1@demo.classpilot");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -28,7 +28,7 @@ function Login() {
   };
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12 }}>
-      <Text style={{ fontSize: 34, fontWeight: "800", color: C.ink }}>Bunk<Text style={{ color: C.accent }}>Smart</Text></Text>
+      <Text style={{ fontSize: 34, fontWeight: "800", color: C.ink }}>Class<Text style={{ color: C.accent }}>Pilot</Text></Text>
       <Text style={s.muted}>Know exactly when you can skip, and when you can't.</Text>
       <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="Email" style={s.input} />
       <TextInput value={password} onChangeText={setPassword} secureTextEntry placeholder="Password" style={s.input} />
@@ -83,7 +83,7 @@ export default function App() {
         {!session ? <Login /> : (
           <>
             <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderColor: C.line }}>
-              <Text style={{ fontWeight: "800", fontSize: 18, color: C.ink, flex: 1 }}>Bunk<Text style={{ color: C.accent }}>Smart</Text></Text>
+              <Text style={{ fontWeight: "800", fontSize: 18, color: C.ink, flex: 1 }}>Class<Text style={{ color: C.accent }}>Pilot</Text></Text>
               <Pressable onPress={sync}><Text style={s.muted}>{syncing ? "Syncing…" : "Sync"}</Text></Pressable>
               <Pressable onPress={async () => { await clearCache(); setBundle(null); await supabase.auth.signOut(); }} style={{ marginLeft: 14 }}><Text style={s.muted}>Log out</Text></Pressable>
             </View>

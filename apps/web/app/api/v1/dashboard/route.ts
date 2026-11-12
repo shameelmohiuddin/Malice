@@ -1,4 +1,4 @@
-import { dashboardView } from "@bunk/core";
+import { dashboardView } from "@classpilot/core";
 import { api, okJson } from "@/lib/api";
 import { loadStudentDataFor } from "@/lib/data";
 export const GET = api(async (ctx) => {

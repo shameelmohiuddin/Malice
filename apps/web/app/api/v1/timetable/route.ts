@@ -1,4 +1,4 @@
-import { addDays, classAdvice, isISODate, weekday } from "@bunk/core";
+import { addDays, classAdvice, isISODate, weekday } from "@classpilot/core";
 import { api, okJson } from "@/lib/api";
 import { loadStudentDataFor } from "@/lib/data";
 import { ValidationError } from "@/lib/validate";

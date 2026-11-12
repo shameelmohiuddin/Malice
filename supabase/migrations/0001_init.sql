@@ -1,4 +1,4 @@
--- BunkSmart schema. Dates are IST calendar dates.
+-- ClassPilot schema. Dates are IST calendar dates.
 create table public.profiles (
   id uuid primary key references auth.users on delete cascade,
   name text,

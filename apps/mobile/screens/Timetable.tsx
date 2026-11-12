@@ -1,5 +1,5 @@
 import { ScrollView, Text, View } from "react-native";
-import { addDays, parseHHMM, prettyDate, todayIST } from "@bunk/core";
+import { addDays, parseHHMM, prettyDate, todayIST } from "@classpilot/core";
 import type { Bundle } from "../lib/sync";
 import { C, s } from "./theme";
 

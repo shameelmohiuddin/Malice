@@ -4,7 +4,7 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
-export const metadata: Metadata = { title: "BunkSmart", description: "Know exactly when you can skip, and when you can't." };
+export const metadata: Metadata = { title: "ClassPilot", description: "Know exactly when you can skip, and when you can't." };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#2f5bea" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addDays, isISODate, classAdvice, parseHHMM, prettyDate, weekday } from "@bunk/core";
+import { addDays, isISODate, classAdvice, parseHHMM, prettyDate, weekday } from "@classpilot/core";
 import { Chip, ClassroomLink } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
 

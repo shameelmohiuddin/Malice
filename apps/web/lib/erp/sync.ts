@@ -2,7 +2,7 @@ import { decrypt, type Sealed } from "@/lib/crypto";
 import { ErpAuthError, erpLogin, fetchErp } from "./client";
 import { mapErp } from "./map";
 import { loadSnapshot } from "./snapshot";
-import { todayIST } from "@bunk/core";
+import { todayIST } from "@classpilot/core";
 
 export type SyncStore = {
   getCreds(userId: string): Promise<(Sealed & { usn: string }) | null>;

@@ -3,7 +3,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { adminSyncStore, supabaseAdmin } from "@/lib/supabase/admin";
 import { encrypt } from "@/lib/crypto";
 import { syncUser } from "@/lib/erp/sync";
-import { syncCooldownLeft } from "@bunk/core";
+import { syncCooldownLeft } from "@classpilot/core";
 
 const COOLDOWN_SEC = 60;
 

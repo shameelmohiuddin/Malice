@@ -10,7 +10,7 @@ export default function Login() {
     <main className="min-h-screen grid place-items-center p-4">
       <div className="w-full max-w-sm space-y-6">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Bunk<span className="text-accent">Smart</span></h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">Class<span className="text-accent">Pilot</span></h1>
           <p className="text-muted mt-1">Know exactly when you can skip, and when you can't.</p>
         </div>
         <form action={action} className="card p-5 space-y-3">
