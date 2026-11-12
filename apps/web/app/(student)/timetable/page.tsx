@@ -66,12 +66,11 @@ export default async function Timetable({ searchParams }: { searchParams: Promis
                 const p = s ? pct(s.present, s.held) : null;
                 const past = day < d.today || (isToday && parseHHMM(t.end) <= now);
                 return (
-                  <div key={t.start + t.courseCode} className={`m-1 p-2.5 flex flex-col gap-1 border ${info(t.courseCode).activity ? "border-dashed border-line bg-panel" : t.extra ? "border-accent-fill bg-card" : "border-line bg-card"} ${t.cancelled || past ? "opacity-55" : ""}`} style={{ gridColumn: span }}>
+                  <div key={t.start + t.courseCode} title={`${name(t.courseCode)}${info(t.courseCode).instructor ? ` · ${info(t.courseCode).instructor}` : ""}`} className={`m-1 p-2.5 flex flex-col gap-1 border ${info(t.courseCode).activity ? "border-dashed border-line bg-panel" : t.extra ? "border-accent-fill bg-card" : "border-line bg-card"} ${t.cancelled || past ? "opacity-55" : ""}`} style={{ gridColumn: span }}>
                     <div className="flex items-start justify-between gap-1">
                       <span className={`headline leading-tight ${info(t.courseCode).activity ? "italic text-[15px] text-ink-2" : "text-[17px]"} ${t.cancelled ? "line-through" : ""}`}>{info(t.courseCode).short}</span>
                       {t.room && <span className="mono text-[10px] text-muted whitespace-nowrap">{t.room}</span>}
                     </div>
-                    <span className="text-[13px] text-ink-2 leading-snug line-clamp-2">{info(t.courseCode).activity ? (info(t.courseCode).instructor ?? "Non-credit") : name(t.courseCode)}</span>
                     <div className="mt-auto flex items-center justify-between gap-1">
                       {t.cancelled ? <span className="tag tag-bad">Cancelled</span> : t.extra ? <span className="tag tag-ink">Extra</span>
                         : <span className="mono text-[10px] text-muted">{t.start}–{t.end}{t.kind === "LAB" ? " · Lab" : t.kind === "TUTORIAL" ? " · Tutorial" : ""}</span>}
