@@ -116,10 +116,14 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
       return { text: `Next: ${nameOf(next.courseCode)}, ${prettyDate(next.date)} ${next.start}${next.room ? `, ${next.room}` : ""}.` };
     }
     case "events": {
+      const tokens = normalize(text);
+      const holidays = tokens.some((t) => t === "holiday" || t === "holidays");
       const from = intent.date ?? today;
-      const to = intent.date ?? addDays(today, 14);
-      const ev = data.events.filter((e) => e.end >= from && e.start <= to).sort((a, b) => (a.start < b.start ? -1 : 1)).slice(0, 6);
-      if (!ev.length) return { text: intent.date ? `No events on ${prettyDate(intent.date)}.` : "No events in the next two weeks." };
+      // Holidays are rarer, so look further ahead; "next holiday" means just the first one.
+      const to = intent.date ?? addDays(today, holidays ? 180 : 14);
+      const ev = data.events.filter((e) => e.end >= from && e.start <= to && (!holidays || (e.isHoliday && !e.cancelled)))
+        .sort((a, b) => (a.start < b.start ? -1 : 1)).slice(0, holidays && tokens.includes("next") ? 1 : 6);
+      if (!ev.length) return { text: holidays ? (intent.date ? `No holiday on ${prettyDate(intent.date)}.` : "No holidays coming up this semester.") : intent.date ? `No events on ${prettyDate(intent.date)}.` : "No events in the next two weeks." };
       return { text: ev.map((e) => `• ${prettyDate(e.start)}: ${e.title}${e.cancelled ? " (cancelled)" : ""}${e.isHoliday ? " (holiday)" : ""}`).join("\n") };
     }
     case "open_section":

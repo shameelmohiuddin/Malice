@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { addDays, nowMinutesIST, overall, parseHHMM, pct, planStudy, prettyDate, shortName } from "@classpilot/core";
+import { addDays, classAdvice, nowMinutesIST, overall, parseHHMM, pct, planStudy, prettyDate, shortName } from "@classpilot/core";
 import { AskBar } from "@/components/AskBar";
-import { ClassroomLink, describe, Empty, pctText, SectionHead, StatusDot, StatusTag } from "@/components/ui";
+import { AdviceTag, ClassroomLink, describe, Empty, pctText, SectionHead, StatusDot, StatusTag } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
 
 const LONG_DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -18,6 +18,11 @@ export default async function Today() {
   const info = (code: string | null) => describe(code, d.catalog, d.stats);
   const name = (code: string | null) => info(code).full;
   const isClass = (t: { courseCode: string | null }) => !!t.courseCode && !info(t.courseCode).activity;
+  /** Skip advice for a tracked class on a date (a deadline that day means don't skip). */
+  const adviceFor = (code: string | null, date: string) => {
+    const s = d.stats.find((x) => x.code === code);
+    return s ? classAdvice(s, d.deadlines.some((x) => x.due === date && x.courseCode === s.code), min) : null;
+  };
 
   if (!d.stats.length)
     return (
@@ -70,6 +75,7 @@ export default async function Today() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {next.room && <span className="tag">{next.room}</span>}
                 <span className="tag">{next.kind === "EXTRA" ? "Extra class" : next.kind.toLowerCase()}</span>
+                {!nextIsNow && <AdviceTag advice={adviceFor(next.courseCode, next.date)} />}
                 <span className="ml-auto"><ClassroomLink url={d.classroom[next.courseCode!]} /></span>
               </div>
             </div>
@@ -101,7 +107,10 @@ export default async function Today() {
                   </div>
                   <p className={`headline ${info(t.courseCode).activity ? "italic text-[19px] text-ink-2" : "text-[22px]"} ${t.cancelled ? "line-through" : ""}`}>{info(t.courseCode).short}</p>
                   <p className="text-[14px] text-ink-2 leading-snug">{info(t.courseCode).activity ? "Non-credit session" : name(t.courseCode)}</p>
-                  {t.room && <p className="mt-auto mono text-[11px] text-muted">{t.room}</p>}
+                  <div className="mt-auto flex items-center justify-between gap-2">
+                    <span className="mono text-[11px] text-muted">{t.room ?? ""}{t.kind === "LAB" || t.kind === "TUTORIAL" ? `${t.room ? " · " : ""}${t.kind.toLowerCase()}` : ""}</span>
+                    {!done && !live && !t.cancelled && <AdviceTag advice={adviceFor(t.courseCode, t.date)} />}
+                  </div>
                 </li>
               );
             })}

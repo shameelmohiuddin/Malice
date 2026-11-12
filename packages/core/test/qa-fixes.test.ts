@@ -1,4 +1,4 @@
-import { it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 import { dashboardView, mergeOverrides, overlaps } from "../src";
 import { ask } from "../src/assistant/answer";
 import { D, T, stats, timetable } from "./fixtures";
@@ -28,4 +28,19 @@ it("I4: time overlap helper", () => {
 
 it("M2: full lab name is not doubled", () => {
   expect(ask("how many computer networks laboratory classes can i skip", D, T).text).toBe("You can skip the next 5 Computer Networks Laboratory sessions.");
+});
+
+describe("demo QA round 2", () => {
+  const base = { stats: [], timetable: [], deadlines: [], classroom: {} };
+  const events = [
+    { id: "1", title: "PTM-1", start: "2026-11-14", end: "2026-11-14", category: "EVENT", isHoliday: false, cancelled: false },
+    { id: "2", title: "Kannada Rajyotsava", start: "2026-12-01", end: "2026-12-01", category: "HOLIDAY", isHoliday: true, cancelled: false },
+  ];
+  it("next holiday returns only holidays, looking past two weeks", () => {
+    expect(ask("next holiday", { ...base, events }, "2026-11-12").text).toBe("• Tue 1 Dec: Kannada Rajyotsava (holiday)");
+  });
+  it("non-credit sessions are named, not shown as codes", () => {
+    const timetable = [{ date: "2026-11-13", start: "13:45", end: "14:40", courseCode: "CP-PLACE", kind: "ACTIVITY", room: null, cancelled: false, extra: false }];
+    expect(ask("can i skip tomorrow", { ...base, events: [], timetable, names: { "CP-PLACE": "Placement Training" } }, "2026-11-12").text).toContain("Placement Training");
+  });
 });

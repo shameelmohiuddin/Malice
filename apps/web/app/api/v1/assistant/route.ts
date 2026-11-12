@@ -7,5 +7,5 @@ export const POST = api(async (ctx, req) => {
   const b = (await body(req)) as { text?: unknown };
   if (typeof b?.text !== "string" || !b.text.trim() || b.text.length > 300) throw new ValidationError("text is required (max 300 chars)");
   const d = await loadStudentDataFor(ctx);
-  return okJson(ask(b.text, { ...d, min: Number(d.profile.min_attendance ?? 0.75) }, d.today, nowMinutesIST()));
+  return okJson(ask(b.text, { ...d, min: Number(d.profile.min_attendance ?? 0.75), names: Object.fromEntries(Object.entries(d.catalog).map(([code, c]) => [code, c.name])) }, d.today, nowMinutesIST()));
 });
