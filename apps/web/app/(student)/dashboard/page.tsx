@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { addDays, nowMinutesIST, overall, parseHHMM, pct, planStudy, prettyDate, shortName } from "@classpilot/core";
 import { AskBar } from "@/components/AskBar";
-import { ClassroomLink, Empty, pctText, SectionHead, StatusDot, StatusTag } from "@/components/ui";
+import { ClassroomLink, describe, Empty, pctText, SectionHead, StatusDot, StatusTag } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
 
 const LONG_DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -15,7 +15,9 @@ export default async function Today() {
   const now = nowMinutesIST();
   const first = (d.profile.name ?? "").split(/\s+/)[0] || "there";
   const greeting = now < 12 * 60 ? "Good morning" : now < 17 * 60 ? "Good afternoon" : "Good evening";
-  const name = (code: string | null) => d.stats.find((s) => s.code === code)?.name ?? code ?? "";
+  const info = (code: string | null) => describe(code, d.catalog, d.stats);
+  const name = (code: string | null) => info(code).full;
+  const isClass = (t: { courseCode: string | null }) => !!t.courseCode && !info(t.courseCode).activity;
 
   if (!d.stats.length)
     return (
@@ -28,7 +30,7 @@ export default async function Today() {
     );
 
   const todaySlots = d.timetable.filter((t) => t.date === d.today).sort((a, b) => parseHHMM(a.start) - parseHHMM(b.start));
-  const upcoming = d.timetable.filter((t) => t.courseCode && !t.cancelled && (t.date > d.today || (t.date === d.today && parseHHMM(t.end) > now)))
+  const upcoming = d.timetable.filter((t) => isClass(t) && !t.cancelled && (t.date > d.today || (t.date === d.today && parseHHMM(t.end) > now)))
     .sort((a, b) => (a.date === b.date ? parseHHMM(a.start) - parseHHMM(b.start) : a.date < b.date ? -1 : 1));
   const next = upcoming[0];
   const nextIsNow = next && next.date === d.today && parseHHMM(next.start) <= now;
@@ -54,8 +56,8 @@ export default async function Today() {
           <p className="label mb-3">{longDate(d.today)} · Section {d.profile.section ?? "—"}</p>
           <h1 id="hello" className="display text-[40px] md:text-[64px]">{greeting}, <em className="font-semibold">{first}</em>.</h1>
           <p className="mt-3 text-[18px] text-ink-2 max-w-xl">
-            {todaySlots.filter((t) => t.courseCode && !t.cancelled).length
-              ? `${todaySlots.filter((t) => t.courseCode && !t.cancelled).length} ${todaySlots.filter((t) => t.courseCode && !t.cancelled).length === 1 ? "class" : "classes"} today${below.length ? `. ${below.map((s) => shortName(s.name)).join(", ")} ${below.length > 1 ? "are" : "is"} below the ${Math.round(min * 100)}% minimum.` : "."}`
+            {todaySlots.filter((t) => isClass(t) && !t.cancelled).length
+              ? `${todaySlots.filter((t) => isClass(t) && !t.cancelled).length} ${todaySlots.filter((t) => isClass(t) && !t.cancelled).length === 1 ? "class" : "classes"} today${below.length ? `. ${below.map((s) => shortName(s.name)).join(", ")} ${below.length > 1 ? "are" : "is"} below the ${Math.round(min * 100)}% minimum.` : "."}`
               : "No classes today."}
           </p>
         </div>
@@ -64,7 +66,7 @@ export default async function Today() {
           {next ? (
             <div className="pt-3">
               <p className="headline text-[26px]">{shortName(name(next.courseCode))} <span className="text-ink-2 font-medium">at {next.start}</span></p>
-              <p className="text-ink-2">{name(next.courseCode)}</p>
+              <p className="text-ink-2">{name(next.courseCode)}{info(next.courseCode).instructor ? ` · ${info(next.courseCode).instructor}` : ""}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {next.room && <span className="tag">{next.room}</span>}
                 <span className="tag">{next.kind === "EXTRA" ? "Extra class" : next.kind.toLowerCase()}</span>
@@ -97,8 +99,8 @@ export default async function Today() {
                     <span className="mono text-[12px] font-bold">{t.start}–{t.end}</span>
                     {t.cancelled ? <span className="tag tag-bad">Cancelled</span> : t.extra ? <span className="tag tag-ink">Extra</span> : live ? <span className="tag tag-warn">Now</span> : done ? <span className="tag">Done</span> : null}
                   </div>
-                  <p className={`headline text-[22px] ${t.cancelled ? "line-through" : ""}`}>{shortName(name(t.courseCode))}</p>
-                  <p className="text-[14px] text-ink-2 leading-snug">{name(t.courseCode)}</p>
+                  <p className={`headline ${info(t.courseCode).activity ? "italic text-[19px] text-ink-2" : "text-[22px]"} ${t.cancelled ? "line-through" : ""}`}>{info(t.courseCode).short}</p>
+                  <p className="text-[14px] text-ink-2 leading-snug">{info(t.courseCode).activity ? "Non-credit session" : name(t.courseCode)}</p>
                   {t.room && <p className="mt-auto mono text-[11px] text-muted">{t.room}</p>}
                 </li>
               );

@@ -1,4 +1,4 @@
-import { addDays, parseHHMM, toHHMM } from "./dates";
+import { addDays, overlaps, parseHHMM, toHHMM, weekday } from "./dates";
 import type { Deadline, ScheduleOverride, StudyBlock, TimetableSlot } from "./types";
 
 const WINDOWS: [number, number][] = [[parseHHMM("09:00"), parseHHMM("17:00")], [parseHHMM("18:00"), parseHHMM("21:00")]];
@@ -79,4 +79,43 @@ export const mergeOverrides = (slots: TimetableSlot[], overrides: ScheduleOverri
     }
   }
   return out.sort((a, b) => (a.date === b.date ? parseHHMM(a.start) - parseHHMM(b.start) : a.date < b.date ? -1 : 1));
+};
+
+/** One row of a section's official weekly timetable. weekday: 1 = Monday … 6 = Saturday. */
+export type TemplateSlot = {
+  weekday: number; start: string; end: string;
+  /** Course codes this slot can be (electives list several). "OE*" = the student's open elective. Empty for BREAK/LUNCH. */
+  options: string[];
+  kind: "THEORY" | "LAB" | "TUTORIAL" | "ACTIVITY" | "BREAK" | "LUNCH";
+  room: string | null;
+};
+
+const resolveOption = (options: string[], enrolled: Set<string>): string | null => {
+  for (const o of options) {
+    if (o === "OE*") { const oe = [...enrolled].find((c) => c.slice(4, 6) === "OE"); if (oe) return oe; }
+    else if (enrolled.has(o)) return o;
+  }
+  return null;
+};
+
+/**
+ * Expand the weekly template into dated slots for one student between `from` and `to` (inclusive).
+ * Electives resolve to the course the student is enrolled in; activities (non-credit sessions) are always kept;
+ * breaks/lunch are dropped where a class the student attends runs through them; no-class dates are skipped.
+ */
+export const expandTemplate = (template: TemplateSlot[], enrolled: Set<string>, from: string, to: string, noClass: Set<string>): TimetableSlot[] => {
+  const out: TimetableSlot[] = [];
+  for (let d = from; d <= to; d = addDays(d, 1)) {
+    if (noClass.has(d)) continue;
+    const rows = template.filter((t) => t.weekday === weekday(d));
+    const classes = rows.flatMap((t) => {
+      if (t.kind === "BREAK" || t.kind === "LUNCH") return [];
+      const code = t.kind === "ACTIVITY" ? t.options[0] ?? null : resolveOption(t.options, enrolled);
+      return code ? [{ date: d, start: t.start, end: t.end, courseCode: code, kind: t.kind, room: t.room, cancelled: false, extra: false }] : [];
+    });
+    const breaks = rows.filter((t) => (t.kind === "BREAK" || t.kind === "LUNCH") && !classes.some((c) => overlaps(c.start, c.end, t.start, t.end)))
+      .map((t) => ({ date: d, start: t.start, end: t.end, courseCode: null, kind: t.kind, room: null, cancelled: false, extra: false }));
+    out.push(...[...classes, ...breaks].sort((a, b) => parseHHMM(a.start) - parseHHMM(b.start)));
+  }
+  return out;
 };

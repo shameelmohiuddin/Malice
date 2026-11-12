@@ -1,8 +1,21 @@
-import { addDays, adjustPlanned, mergeOverrides, todayIST, type AssistantData, type CourseStats } from "@classpilot/core";
+import { addDays, adjustPlanned, mergeOverrides, shortName, todayIST, type AssistantData, type CourseStats } from "@classpilot/core";
 import { supabase } from "./supabase";
 import { getCache, putCache } from "./db";
 
-export type Bundle = AssistantData & { profile: { name: string | null; section: string | null; min_attendance: number } };
+export type Bundle = AssistantData & {
+  profile: { name: string | null; section: string | null; min_attendance: number };
+  catalog?: Record<string, { name: string; instructor: string | null; counts: boolean }>;
+};
+
+/** Full title, short label and whether a code is a non-credit session (not tracked in attendance). */
+export const describe = (b: Bundle, code: string | null) => {
+  if (!code) return { short: "", full: "", instructor: null as string | null, activity: false };
+  const tracked = b.stats.find((x) => x.code === code);
+  const entry = b.catalog?.[code];
+  const full = tracked?.name ?? entry?.name ?? code;
+  const activity = !tracked && entry?.counts === false;
+  return { short: activity ? full : shortName(full), full, instructor: entry?.instructor ?? null, activity };
+};
 
 /** Pull everything the student screens need into SQLite. Throws if offline. */
 export const syncDown = async (userId: string): Promise<void> => {
@@ -12,7 +25,7 @@ export const syncDown = async (userId: string): Promise<void> => {
   const section = profile.section ?? "5CS3";
   const [stats, courses, tt, ov, ev, dl] = await Promise.all([
     supabase.from("course_stats").select("*").eq("user_id", userId),
-    supabase.from("courses").select("code,name,classroom_url"),
+    supabase.from("courses").select("code,name,classroom_url,instructor,counts_attendance"),
     supabase.from("timetable").select("*").eq("user_id", userId).gte("date", addDays(today, -7)).lte("date", addDays(today, 42)),
     supabase.from("schedule_overrides").select("*").eq("section", section),
     supabase.from("events").select("*").order("start_date"),
@@ -23,6 +36,8 @@ export const syncDown = async (userId: string): Promise<void> => {
   const overrides = (ov.data ?? []).map((r: any) => ({ id: r.id, courseCode: r.course_code, date: r.date, start: r.start, end: r.end, action: r.action, room: r.room }));
   const bundle: Bundle = {
     profile, min: Number(profile.min_attendance ?? 0.75),
+    catalog: Object.fromEntries((courses.data ?? []).map((c: any) => [c.code, { name: c.name, instructor: c.instructor ?? null, counts: c.counts_attendance !== false }])),
+    names: Object.fromEntries((courses.data ?? []).map((c: any) => [c.code, c.name])),
     stats: adjustPlanned((stats.data ?? []).map((r: any): CourseStats => ({ code: r.course_code, name: names.get(r.course_code) ?? r.course_code, present: r.present, held: r.held, plannedTotal: r.planned_total })), overrides, today),
     timetable: mergeOverrides(
       (tt.data ?? []).map((r: any) => ({ date: r.date, start: r.start, end: r.end, courseCode: r.course_code, kind: r.kind, room: r.room, cancelled: r.cancelled, extra: false })),

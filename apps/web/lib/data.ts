@@ -33,6 +33,7 @@ export const toDeadline = (r: Row): Deadline & { scope: string } => ({ id: r.id,
 
 export type StudentData = Omit<AssistantData, "deadlines"> & {
   profile: Profile; today: string; courses: { code: string; name: string }[];
+  catalog: Record<string, { name: string; instructor: string | null; counts: boolean }>; advisor: string | null;
   deadlines: (Deadline & { scope: string })[]; lastSync: string | null; lastError: string | null; hasCreds: boolean;
 };
 
@@ -41,14 +42,15 @@ export const loadStudentData = async (): Promise<StudentData> => loadStudentData
 export const loadStudentDataFor = async ({ supabase, user, profile }: Ctx): Promise<StudentData> => {
   const today = todayIST();
   const section = profile.section ?? "5CS3";
-  const [stats, courses, tt, ov, ev, dl, creds] = await Promise.all([
+  const [stats, courses, tt, ov, ev, dl, creds, sec] = await Promise.all([
     supabase.from("course_stats").select("*").eq("user_id", user.id),
-    supabase.from("courses").select("code,name,classroom_url"),
+    supabase.from("courses").select("code,name,classroom_url,instructor,counts_attendance"),
     supabase.from("timetable").select("*").eq("user_id", user.id).gte("date", addDays(today, -14)).lte("date", addDays(today, 42)).order("date").order("start"),
     supabase.from("schedule_overrides").select("*").eq("section", section),
     supabase.from("events").select("*").order("start_date"),
     supabase.from("deadlines").select("*").order("due"),
     supabase.from("erp_credentials").select("last_sync,last_error").eq("user_id", user.id).maybeSingle(),
+    supabase.from("sections").select("class_advisor").eq("section", section).maybeSingle(),
   ]);
   const names = new Map((courses.data ?? []).map((c) => [c.code, c.name]));
   const s: CourseStats[] = (stats.data ?? []).map((r) => ({ code: r.course_code, name: names.get(r.course_code) ?? r.course_code, present: r.present, held: r.held, plannedTotal: r.planned_total }))
@@ -59,6 +61,8 @@ export const loadStudentDataFor = async ({ supabase, user, profile }: Ctx): Prom
     profile, today,
     stats: adjustPlanned(s, overrides, today),
     courses: (courses.data ?? []).filter((c) => mine.has(c.code)).map((c) => ({ code: c.code, name: c.name })),
+    catalog: Object.fromEntries((courses.data ?? []).map((c) => [c.code, { name: c.name, instructor: c.instructor ?? null, counts: c.counts_attendance !== false }])),
+    advisor: sec.data?.class_advisor ?? null,
     timetable: mergeOverrides((tt.data ?? []).map(toSlot), overrides),
     events: (ev.data ?? []).map(toEvent),
     deadlines: (dl.data ?? []).filter((d) => d.scope === "personal" || !d.section || d.section === section).map(toDeadline),

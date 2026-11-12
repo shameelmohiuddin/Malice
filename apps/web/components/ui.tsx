@@ -33,3 +33,15 @@ export const SectionHead = ({ index, title, meta, id }: { index: string; title: 
 export const Empty = ({ children }: { children: React.ReactNode }) => (
   <p className="text-ink-2 italic">{children}</p>
 );
+
+import { shortName } from "@classpilot/core";
+type Catalog = Record<string, { name: string; instructor: string | null; counts: boolean }>;
+/** How to show a course code: tracked subjects get a short code, non-credit sessions their full title. */
+export const describe = (code: string | null, catalog: Catalog, stats: { code: string; name: string }[]) => {
+  if (!code) return { short: "", full: "", instructor: null as string | null, activity: false };
+  const tracked = stats.find((s) => s.code === code);
+  const entry = catalog[code];
+  const full = tracked?.name ?? entry?.name ?? code;
+  const activity = !tracked && entry?.counts === false;
+  return { short: activity ? full : shortName(full), full, instructor: entry?.instructor ?? null, activity };
+};

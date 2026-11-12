@@ -12,6 +12,7 @@ export type AssistantData = {
   deadlines: Deadline[];
   classroom: Record<string, string>;
   min?: number; // student minimum, default 0.75
+  names?: Record<string, string>; // course code → title, for sessions outside attendance (activities)
 };
 export type Reply = { text: string; navigate?: string; openUrl?: string; options?: string[] };
 
@@ -71,7 +72,7 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
   const min = data.min ?? 0.75;
   const stat = intent.subject ? data.stats.find((s) => s.code === intent.subject) : undefined;
   const label = stat ? labelFor(stat, text) : "";
-  const nameOf = (code: string | null) => data.stats.find((s) => s.code === code)?.name ?? code ?? "Class";
+  const nameOf = (code: string | null) => data.stats.find((s) => s.code === code)?.name ?? (code ? data.names?.[code] : undefined) ?? code ?? "Class";
 
   switch (intent.kind) {
     case "attendance": {

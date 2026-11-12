@@ -25,6 +25,10 @@ export const adminSyncStore = (): SyncStore => {
       await db.from("erp_credentials").update(s.ok ? { last_sync: new Date().toISOString(), last_error: null } : { last_error: s.error ?? "Sync failed" }).eq("user_id", userId);
       if (s.ok) await db.from("profiles").update({ synced_at: new Date().toISOString() }).eq("id", userId);
     },
+    async getTemplate(section) {
+      const { data } = await db.from("section_timetable").select("weekday,start,end,options,kind,room").eq("section", section);
+      return (data ?? []) as any;
+    },
     async deleteFutureTimetable(userId, fromDate) {
       const { error } = await db.from("timetable").delete().eq("user_id", userId).gte("date", fromDate);
       if (error) throw new Error(`timetable: ${error.message}`);

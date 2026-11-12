@@ -2,13 +2,14 @@ import { decrypt, type Sealed } from "@/lib/crypto";
 import { ErpAuthError, erpLogin, fetchErp } from "./client";
 import { mapErp } from "./map";
 import { loadSnapshot } from "./snapshot";
-import { todayIST } from "@classpilot/core";
+import { todayIST, type TemplateSlot } from "@classpilot/core";
 
 export type SyncStore = {
   getCreds(userId: string): Promise<(Sealed & { usn: string }) | null>;
   upsert(table: string, rows: Record<string, unknown>[], onConflict: string): Promise<void>;
   setStatus(userId: string, s: { ok: boolean; error?: string }): Promise<void>;
   deleteFutureTimetable(userId: string, fromDate: string): Promise<void>;
+  getTemplate?(section: string): Promise<TemplateSlot[]>;
 };
 export type SyncResult =
   | { ok: true; counts: Record<string, number> }
@@ -36,7 +37,8 @@ export const syncUser = async (
       return { ok: false, error: auth ? "ERP_AUTH" : "ERP_DOWN", message };
     }
   }
-  const m = mapErp(raw, today);
+  const template = (await store.getTemplate?.(raw.student.section)) ?? [];
+  const m = mapErp(raw, today, template);
   // Upserts only: a failed or partial sync never deletes existing data.
   await store.upsert("courses", m.courses.map((c) => ({ code: c.code, name: c.name })), "code");
   await store.upsert("attendance_logs", m.logs.map((l) => ({ user_id: userId, erp_log_id: l.erpLogId, course_code: l.courseCode, date: l.date, start: l.start, end: l.end, status: l.status })), "user_id,erp_log_id");

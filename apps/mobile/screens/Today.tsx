@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { addDays, nowMinutesIST, overall, parseHHMM, pct, planStudy, prettyDate, shortName, todayIST } from "@classpilot/core";
-import type { Bundle } from "../lib/sync";
+import { describe, type Bundle } from "../lib/sync";
 import { ClassroomLink, Dot, Empty, SectionHead, Tag } from "./parts";
 import { attendanceStatus, F, pctText, statusColor, useTheme } from "./theme";
 
@@ -12,13 +12,15 @@ export function Today({ b, go }: { b: Bundle; go: (tab: string) => void }) {
   const today = todayIST();
   const now = nowMinutesIST();
   const min = Number(b.profile.min_attendance ?? 0.75);
-  const name = (code: string | null) => b.stats.find((x) => x.code === code)?.name ?? code ?? "";
+  const info = (code: string | null) => describe(b, code);
+  const name = (code: string | null) => info(code).full;
+  const isClass = (t: { courseCode: string | null }) => !!t.courseCode && !info(t.courseCode).activity;
   const first = (b.profile.name ?? "").split(/\s+/)[0] || "there";
   const greeting = now < 720 ? "Good morning" : now < 1020 ? "Good afternoon" : "Good evening";
 
   const slots = b.timetable.filter((t) => t.date === today).sort((a, x) => parseHHMM(a.start) - parseHHMM(x.start));
-  const classesToday = slots.filter((t) => t.courseCode && !t.cancelled).length;
-  const next = b.timetable.filter((t) => t.courseCode && !t.cancelled && (t.date > today || (t.date === today && parseHHMM(t.end) > now)))
+  const classesToday = slots.filter((t) => isClass(t) && !t.cancelled).length;
+  const next = b.timetable.filter((t) => isClass(t) && !t.cancelled && (t.date > today || (t.date === today && parseHHMM(t.end) > now)))
     .sort((a, x) => (a.date === x.date ? parseHHMM(a.start) - parseHHMM(x.start) : a.date < x.date ? -1 : 1))[0];
   const nextIsNow = next && next.date === today && parseHHMM(next.start) <= now;
   const horizon = addDays(today, 14);
@@ -49,7 +51,7 @@ export function Today({ b, go }: { b: Bundle; go: (tab: string) => void }) {
         {next ? (
           <>
             <Text style={s.headline}>{shortName(name(next.courseCode))} <Text style={{ color: c.ink2, fontFamily: F.serif }}>at {next.start}</Text></Text>
-            <Text style={s.body2}>{name(next.courseCode)}</Text>
+            <Text style={s.body2}>{name(next.courseCode)}{info(next.courseCode).instructor ? ` · ${info(next.courseCode).instructor}` : ""}</Text>
             <View style={[s.row, { flexWrap: "wrap", gap: 6 }]}>
               {next.room && <Tag>{next.room}</Tag>}
               {next.extra && <Tag tone="ink">Extra</Tag>}
@@ -80,8 +82,8 @@ export function Today({ b, go }: { b: Bundle; go: (tab: string) => void }) {
                     <Text style={[s.mono, { fontFamily: F.monoBold }]}>{t.start}–{t.end}</Text>
                     {t.cancelled ? <Tag tone="bad">Cancelled</Tag> : t.extra ? <Tag tone="ink">Extra</Tag> : live ? <Tag tone="warn">Now</Tag> : done ? <Tag>Done</Tag> : null}
                   </View>
-                  <Text style={[s.headline, { fontSize: 21 }, t.cancelled && { textDecorationLine: "line-through" }]}>{shortName(name(t.courseCode))}</Text>
-                  <Text style={s.body2} numberOfLines={2}>{name(t.courseCode)}</Text>
+                  <Text style={[s.headline, info(t.courseCode).activity ? { fontSize: 17, fontFamily: "PlayfairDisplay_600SemiBold_Italic", color: c.ink2 } : { fontSize: 21 }, t.cancelled && { textDecorationLine: "line-through" }]}>{info(t.courseCode).short}</Text>
+                  <Text style={s.body2} numberOfLines={2}>{info(t.courseCode).activity ? "Non-credit session" : name(t.courseCode)}</Text>
                   {t.room && <Text style={[s.monoMuted, { marginTop: "auto" }]}>{t.room}</Text>}
                 </View>
               );

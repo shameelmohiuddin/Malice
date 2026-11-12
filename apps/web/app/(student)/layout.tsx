@@ -20,7 +20,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
           <span className="label">{d.lastSync ? `ERP synced ${new Date(d.lastSync).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : "Not synced with the ERP yet"}</span>
         </div>
       </footer>
-      <Assistant data={{ stats: d.stats, timetable: d.timetable, events: d.events, deadlines: d.deadlines, classroom: d.classroom, min: Number(d.profile.min_attendance ?? 0.75) }} />
+      <Assistant data={{ stats: d.stats, timetable: d.timetable, events: d.events, deadlines: d.deadlines, classroom: d.classroom, min: Number(d.profile.min_attendance ?? 0.75), names: Object.fromEntries(Object.entries(d.catalog).map(([k, v]) => [k, v.name])) }} />
     </>
   );
 }

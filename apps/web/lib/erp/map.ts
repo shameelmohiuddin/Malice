@@ -1,4 +1,4 @@
-import { addDays, weekday, type CalendarEvent, type CourseStats, type TimetableSlot } from "@classpilot/core";
+import { addDays, expandTemplate, weekday, type CalendarEvent, type CourseStats, type TemplateSlot, type TimetableSlot } from "@classpilot/core";
 import type { ErpRaw } from "./types";
 
 export type LogRow = { erpLogId: number; courseCode: string; date: string; start: string; end: string; status: "PRESENT" | "ABSENT" };
@@ -15,7 +15,7 @@ const hhmm = (t: string) => t.slice(0, 5);
 const PATTERN_WINDOW_DAYS = 35;
 const NO_CLASS_CODES = new Set(["CONTINUOUS_INTERNAL_EVALUATION", "LAB_TEST"]);
 
-export const mapErp = (raw: ErpRaw, today: string): Mapped => {
+export const mapErp = (raw: ErpRaw, today: string, template: TemplateSlot[] = []): Mapped => {
   const semStart = raw.events.find((e) => e.event_code === "CLASS_START")?.start_date ?? addDays(today, -60);
   const semEnd = raw.events.find((e) => e.event_code === "CLASS_END")?.start_date ?? addDays(today, 60);
 
@@ -46,14 +46,26 @@ export const mapErp = (raw: ErpRaw, today: string): Mapped => {
     ({ date, start, end, courseCode, kind, room, cancelled, extra: false, erpEntryId, section });
 
   const timetable: Mapped["timetable"] = [];
-  // Past: from logs.
-  for (const l of logs) timetable.push(slot(l.date, l.start, l.end, l.courseCode, "THEORY", null));
+  const enrolled = new Set(raw.courses.map((c) => c.courseCode));
+  // Past: classes from attendance logs (the truth), with kind and room from the official template where it matches.
+  for (const l of logs) {
+    const tpl = template.find((t) => t.weekday === weekday(l.date) && t.start === l.start && (t.options.includes(l.courseCode) || (t.options.includes("OE*") && l.courseCode.slice(4, 6) === "OE")));
+    timetable.push(slot(l.date, l.start, l.end, l.courseCode, tpl?.kind ?? "THEORY", tpl?.room ?? null));
+  }
+  // Past: non-credit sessions and breaks from the template (the ERP doesn't log them).
+  if (template.length)
+    for (const t of expandTemplate(template, enrolled, semStart, addDays(today, -1), noClass))
+      if (t.kind === "ACTIVITY" || !t.courseCode) timetable.push(slot(t.date, t.start, t.end, t.courseCode, t.kind, t.room));
   // ERP-published entries (today and any future days the ERP returns).
   const erpDates = new Set(raw.timetable.map((t) => t.sessionDate));
   for (const t of raw.timetable)
     timetable.push(slot(t.sessionDate, hhmm(t.startTime), hhmm(t.endTime), t.course?.courseCode ?? null, t.logType?.[0] ?? "THEORY", t.room?.roomCode ?? null, !!t.isCancelled, t.entryId));
-  // Future days the ERP hasn't published: repeat the weekly pattern.
-  for (let d = today; d <= semEnd; d = addDays(d, 1)) {
+  // Future days the ERP hasn't published: the section's official timetable, else the weekly pattern seen in logs.
+  if (template.length) {
+    for (const t of expandTemplate(template, enrolled, today, semEnd, noClass))
+      if (!erpDates.has(t.date) && !logs.some((l) => l.date === t.date && l.start === t.start && l.courseCode === t.courseCode))
+        timetable.push(slot(t.date, t.start, t.end, t.courseCode, t.kind, t.room));
+  } else for (let d = today; d <= semEnd; d = addDays(d, 1)) {
     if (erpDates.has(d) || noClass.has(d)) continue;
     const day = pattern.filter((p) => p.wd === weekday(d));
     if (!day.length) continue;

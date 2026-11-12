@@ -23,3 +23,16 @@ it("events and logs", () => {
   expect(m.logs.filter((l) => l.courseCode === "23CSPE311")).toHaveLength(20);
   expect(m.semester).toEqual({ start: "2026-09-07", end: "2026-12-30" });
 });
+
+it("uses the section's official template for future weeks when there is one", () => {
+  const tpl = [
+    { weekday: 1, start: "09:00", end: "09:55", options: ["23CSPC303"], kind: "THEORY" as const, room: "205" },
+    { weekday: 1, start: "10:15", end: "12:05", options: ["ESDP01"], kind: "ACTIVITY" as const, room: "Audi-3" },
+  ];
+  const t = mapErp(raw, "2026-11-12", tpl);
+  const mon = t.timetable.filter((x) => x.date === "2026-11-16");
+  expect(mon.map((x) => `${x.start} ${x.courseCode} ${x.room}`)).toEqual(["09:00 23CSPC303 205", "10:15 ESDP01 Audi-3"]);
+  // CN: held 23 + one Monday a week from 16 Nov to 30 Dec, minus the CIE/lab-test week Mondays (21 Dec, 28 Dec)
+  expect(t.stats.find((s) => s.code === "23CSPC303")!.plannedTotal).toBe(23 + 5);
+  expect(t.timetable.some((x) => x.date === "2026-11-12" && x.courseCode === "23CSPC305")).toBe(true); // ERP's own day kept
+});
