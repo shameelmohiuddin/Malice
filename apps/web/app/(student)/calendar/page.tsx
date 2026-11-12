@@ -32,7 +32,7 @@ export default async function Calendar({ searchParams }: { searchParams: Promise
     <div className="space-y-12">
       <section aria-labelledby="cal-h" className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <p className="label mb-3">Academic calendar · ERP and your teachers</p>
+          <p className="label mb-3">Academic calendar · MITE and your teachers</p>
           <h1 id="cal-h" className="display text-[38px] md:text-[56px]">{MONTHS[mo - 1]} <span className="text-ink-2 font-semibold">{y}</span></h1>
         </div>
         <nav aria-label="Month" className="flex gap-2 w-full sm:w-auto [&>a]:flex-1 sm:[&>a]:flex-none">
@@ -54,11 +54,15 @@ export default async function Calendar({ searchParams }: { searchParams: Promise
               <div key={day} className={`min-h-[112px] p-2 border-b border-r border-line ${today ? "bg-panel" : ""}`}>
                 <span className={`num text-[14px] font-bold inline-grid place-items-center w-7 h-7 ${today ? "bg-ink text-bg" : ""}`}>{i + 1}</span>
                 <ul className="mt-1 space-y-1">
-                  {list.slice(0, 3).map((it) => (
-                    <li key={it.id} className={`flex items-start gap-1.5 text-[12px] leading-tight ${it.cancelled ? "line-through text-muted" : ""}`}>
-                      <span className={`dot mt-1 ${COLOR[it.kind]}`} aria-hidden /><span className="line-clamp-2">{it.title}</span>
-                    </li>
-                  ))}
+                  {list.slice(0, 3).map((it) =>
+                    // A multi-day event is named on its first day, the 1st of the month and each Monday; other days show a quiet bar.
+                    it.start !== day && day !== first && weekday(day) !== 1 ? (
+                      <li key={it.id} title={it.title} className={`h-1.5 mt-2 ${COLOR[it.kind]} ${it.cancelled ? "opacity-40" : "opacity-70"}`}><span className="sr-only">{it.title} continues</span></li>
+                    ) : (
+                      <li key={it.id} className={`flex items-start gap-1.5 text-[12px] leading-tight ${it.cancelled ? "line-through text-muted" : ""}`}>
+                        <span className={`dot mt-1 ${COLOR[it.kind]}`} aria-hidden /><span className="line-clamp-2">{it.title}</span>
+                      </li>
+                    ))}
                   {list.length > 3 && <li className="mono text-[11px] text-muted">+{list.length - 3} more</li>}
                 </ul>
               </div>

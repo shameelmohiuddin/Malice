@@ -44,3 +44,17 @@ describe("demo QA round 2", () => {
     expect(ask("can i skip tomorrow", { ...base, events: [], timetable, names: { "CP-PLACE": "Placement Training" } }, "2026-11-12").text).toContain("Placement Training");
   });
 });
+
+describe("official calendar events", () => {
+  const base = { stats: [], timetable: [], deadlines: [], classroom: {} };
+  const events = [
+    { id: "t", title: "Theory Examination", start: "2027-01-07", end: "2027-01-23", category: "EXAMINATION", isHoliday: false, cancelled: false },
+    { id: "p", title: "Practical Examination", start: "2027-01-25", end: "2027-02-01", category: "EXAMINATION", isHoliday: false, cancelled: false },
+  ];
+  it("a date inside a multi-day exam window finds that exam, in next year", () => {
+    expect(ask("events on 10 jan", { ...base, events }, "2026-11-12").text).toBe("• Thu 7 Jan: Theory Examination");
+  });
+  it("exams are not reported as holidays", () => {
+    expect(ask("next holiday", { ...base, events }, "2026-12-31").text).toBe("No holidays coming up this semester.");
+  });
+});

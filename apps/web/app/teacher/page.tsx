@@ -130,7 +130,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
                     <span className={`flex-1 text-[15px] ${e.cancelled ? "line-through text-muted" : ""}`}>{e.title}</span>
                     {e.source === "app"
                       ? <form action={setEventCancelled.bind(null, e.id, !e.cancelled)}><button className="link min-h-11 px-1">{e.cancelled ? "Restore" : "Cancel"}</button></form>
-                      : <span className="tag">ERP</span>}
+                      : <span className="tag">{e.source === "erp" ? "ERP" : "Official"}</span>}
                   </li>
                 ))}
               </ul>
