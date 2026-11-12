@@ -27,8 +27,13 @@ import { F, ThemeProvider, useTheme } from "./screens/theme";
 
 const TABS = [["today", "Today"], ["timetable", "Week"], ["calendar", "Calendar"], ["attendance", "Attendance"], ["assistant", "Ask"]] as const;
 
+/** The ClassPilot web server. The ERP check runs there: the APK never holds the keys it needs. */
+const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
+
 function Login() {
   const { c, s } = useTheme();
+  // Students log in with their MITE ERP account (like the web app); email accounts are for staff and demos.
+  const [mode, setMode] = useState<"erp" | "email">("erp");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -36,33 +41,53 @@ function Login() {
   const [busy, setBusy] = useState(false);
   const go = async () => {
     setBusy(true); setErr(null);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    setBusy(false);
-    if (error) setErr(error.message);
+    try {
+      if (mode === "email") {
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) setErr(error.message);
+        return;
+      }
+      if (!API_URL) { setErr("This build has no server address, so ERP login is unavailable."); return; }
+      const res = await fetch(`${API_URL}/api/v1/auth/erp`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: email.trim(), password }),
+      });
+      const j = await res.json().catch(() => null);
+      if (!j?.ok) { setErr(j?.message ?? "Couldn't reach ClassPilot. Check your connection."); return; }
+      const { error } = await supabase.auth.setSession(j.data);
+      if (error) setErr(error.message);
+    } catch {
+      setErr("Couldn't reach ClassPilot. Check your connection.");
+    } finally {
+      setBusy(false);
+    }
   };
+  const erp = mode === "erp";
   return (
     <View style={{ flex: 1, padding: 24, justifyContent: "center", gap: 18 }}>
       <View style={{ gap: 10, marginBottom: 12 }}>
         <Text style={[s.label, { color: c.accent }]}>MITE · from your ERP</Text>
         <Text style={[s.display, { fontSize: 44, lineHeight: 48 }]}>Class<Text style={{ fontFamily: F.displayItalic }}>Pilot</Text></Text>
-        <Text style={s.body2}>Your timetable, attendance and deadlines in one place, even offline.</Text>
+        <Text style={s.body2}>{erp ? "Log in with your MITE ERP account. ClassPilot checks it with the ERP and brings in your attendance and timetable." : "Staff and demo accounts."}</Text>
       </View>
       <View style={{ gap: 6 }}>
-        <Text style={s.label}>College email</Text>
-        <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" style={s.input} accessibilityLabel="College email" placeholderTextColor={c.muted} />
+        <Text style={s.label}>{erp ? "USN or college email" : "Email"}</Text>
+        <TextInput value={email} onChangeText={setEmail} autoCapitalize={erp ? "characters" : "none"} autoCorrect={false} keyboardType={erp ? "default" : "email-address"} autoComplete={erp ? "username" : "email"} style={s.input} accessibilityLabel={erp ? "USN or college email" : "Email"} placeholderTextColor={c.muted} />
       </View>
       <View style={{ gap: 6 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={s.label}>Password</Text>
+          <Text style={s.label}>{erp ? "ERP password" : "Password"}</Text>
           <Pressable onPress={() => setShow(!show)} hitSlop={12} accessibilityRole="button" accessibilityLabel={show ? "Hide password" : "Show password"}>
             <Text style={[s.label, { color: c.accent }]}>{show ? "Hide" : "Show"}</Text>
           </Pressable>
         </View>
-        <TextInput value={password} onChangeText={setPassword} secureTextEntry={!show} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" style={s.input} accessibilityLabel="Password" />
+        <TextInput value={password} onChangeText={setPassword} secureTextEntry={!show} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" style={s.input} accessibilityLabel={erp ? "ERP password" : "Password"} />
       </View>
       {err && <Text style={[s.body, { color: c.bad }]} accessibilityRole="alert">{err}</Text>}
       <Pressable onPress={go} style={[s.btn, busy && { opacity: 0.6 }]} disabled={busy} accessibilityRole="button">
-        <Text style={s.btnText}>{busy ? "Logging in…" : "Log in"}</Text>
+        <Text style={s.btnText}>{busy ? (erp ? "Checking with the ERP…" : "Logging in…") : erp ? "Log in with MITE ERP" : "Log in"}</Text>
+      </Pressable>
+      <Pressable onPress={() => { setMode(erp ? "email" : "erp"); setErr(null); }} hitSlop={8} accessibilityRole="button" style={{ minHeight: 44, justifyContent: "center" }}>
+        <Text style={[s.label, { color: c.accent }]}>{erp ? "Staff or demo account" : "Student? Log in with MITE ERP"}</Text>
       </Pressable>
     </View>
   );

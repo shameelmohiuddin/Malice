@@ -11,9 +11,11 @@ export type SignInDeps = {
   saveCreds: (userId: string, usn: string, password: string) => Promise<void>;
   sync: (userId: string, raw: ErpRaw) => Promise<{ ok: boolean }>;
   emailOf: (userId: string) => Promise<string>;
-  startSession: (email: string) => Promise<void>;
+  /** Web: sets the session cookie. Mobile API: returns the tokens for the app to keep. */
+  startSession: (email: string) => Promise<SessionTokens | void>;
 };
-export type SignInResult = { ok: true; created: boolean } | { ok: false; error: string };
+export type SessionTokens = { access_token: string; refresh_token: string };
+export type SignInResult = { ok: true; created: boolean; session?: SessionTokens } | { ok: false; error: string };
 
 /** ClassPilot's own login address for an ERP student. Not a real mailbox: nothing is ever sent to it. */
 export const erpEmail = (usn: string) => `${usn.toLowerCase()}@erp.classpilot`;
@@ -54,8 +56,8 @@ export const erpSignIn = async (usernameRaw: string, password: string, deps: Sig
   await deps.saveProfile(userId, { name: raw.student.name || usn, usn, section: raw.student.section });
   await deps.saveCreds(userId, usn, password);
   await deps.sync(userId, raw); // a failed sync still signs the student in; Settings shows the error and can retry
-  await deps.startSession(await deps.emailOf(userId));
-  return { ok: true, created };
+  const session = await deps.startSession(await deps.emailOf(userId));
+  return session ? { ok: true, created, session } : { ok: true, created };
 };
 
 export const realErpDeps = { login: erpLogin, fetch: (token: string) => fetchErp(token) };

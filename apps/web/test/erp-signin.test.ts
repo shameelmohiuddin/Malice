@@ -72,3 +72,16 @@ describe("ERP sign-in", () => {
     expect(erpEmail("4MT23CS001")).toBe("4mt23cs001@erp.classpilot");
   });
 });
+
+describe("ERP sign-in for the mobile app", () => {
+  it("returns the session tokens when the session is handed over as tokens", async () => {
+    const d = fakes();
+    d.startSession.mockResolvedValueOnce({ access_token: "a", refresh_token: "r" } as never);
+    expect(await erpSignIn(user(), "p", d)).toEqual({ ok: true, created: true, session: { access_token: "a", refresh_token: "r" } });
+  });
+  it("a wrong password returns no tokens", async () => {
+    const d = fakes({ login: async () => { throw new ErpAuthError("bad"); } });
+    expect(await erpSignIn(user(), "p", d)).not.toHaveProperty("session");
+    expect(d.startSession).not.toHaveBeenCalled();
+  });
+});
