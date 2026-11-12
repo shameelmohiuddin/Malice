@@ -39,7 +39,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
           </nav>
         </section>
 
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr]">
+        <div className="grid gap-10 grid-cols-1 lg:grid-cols-[1.2fr_1fr] [&>*]:min-w-0">
           <div className="space-y-10">
             <section aria-labelledby="day-h">
               <SectionHead index="01" id="day-h" title={prettyDate(date)} meta={`${classes.length} classes`} />
@@ -68,7 +68,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
                 <input type="hidden" name="section" value={section} />
                 <div className="field"><label htmlFor="ex-course" className="label">Subject</label>
                   <select id="ex-course" name="course" required className="input">{courses.data?.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-3 [&>*]:min-w-0">
                   <div className="field"><label htmlFor="ex-date" className="label">Date</label><input id="ex-date" name="date" type="date" required defaultValue={date} className="input" /></div>
                   <div className="field"><label htmlFor="ex-start" className="label">Start</label><input id="ex-start" name="start" type="time" required defaultValue="15:35" className="input" /></div>
                   <div className="field"><label htmlFor="ex-end" className="label">End</label><input id="ex-end" name="end" type="time" required defaultValue="16:30" className="input" /></div>
@@ -100,8 +100,8 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
               <form action={postDeadline} className="folio p-5 space-y-4">
                 <input type="hidden" name="section" value={section} />
                 <div className="field"><label htmlFor="d-title" className="label">Title</label><input id="d-title" name="title" required maxLength={120} placeholder="DBMS quiz 3" className="input" /></div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="field"><label htmlFor="d-course" className="label">Subject</label><select id="d-course" name="course" className="input">{courses.data?.map((c) => <option key={c.code} value={c.code}>{shortName(c.name)}</option>)}</select></div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 [&>*]:min-w-0 [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-1">
+                  <div className="field"><label htmlFor="d-course" className="label">Subject</label><select id="d-course" name="course" className="input"><option value="">Whole class (no subject)</option>{courses.data?.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></div>
                   <div className="field"><label htmlFor="d-kind" className="label">Type</label><select id="d-kind" name="kind" className="input"><option value="quiz">Quiz</option><option value="assignment">Assignment</option><option value="exam">Exam</option></select></div>
                   <div className="field"><label htmlFor="d-due" className="label">Due</label><input id="d-due" name="due" type="date" required min={todayIST()} className="input" /></div>
                 </div>
@@ -114,7 +114,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
               <SectionHead index="05" id="ev-h" title="Events" />
               <form action={createEvent} className="folio p-5 space-y-4">
                 <div className="field"><label htmlFor="e-title" className="label">Title</label><input id="e-title" name="title" required maxLength={120} placeholder="Coding club meet" className="input" /></div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-3 [&>*]:min-w-0">
                   <div className="field"><label htmlFor="e-start" className="label">Starts</label><input id="e-start" name="start" type="date" required className="input" /></div>
                   <div className="field"><label htmlFor="e-end" className="label">Ends</label><input id="e-end" name="end" type="date" className="input" /></div>
                   <div className="field"><label htmlFor="e-cat" className="label">Type</label><select id="e-cat" name="category" className="input"><option>EVENT</option><option>WORKSHOP</option><option>FEST</option><option>SEMINAR</option></select></div>
@@ -139,7 +139,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
               <div className="folio divide-y divide-line">
                 {courses.data?.map((c) => (
                   <form key={c.code} action={setClassroomUrl.bind(null, c.code)} className="p-3 flex items-center gap-3">
-                    <label htmlFor={`cr-${c.code}`} className="mono text-[12px] font-bold w-[72px] shrink-0">{shortName(c.name)}</label>
+                    <label htmlFor={`cr-${c.code}`} className="text-[14px] leading-snug w-[180px] shrink-0">{c.name}</label>
                     <input id={`cr-${c.code}`} name="url" defaultValue={c.classroom_url ?? ""} placeholder="https://classroom.google.com/c/…" className="input" />
                     <button className="btn btn-line">Save</button>
                   </form>
