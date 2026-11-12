@@ -1,11 +1,12 @@
 "use client";
 import { useActionState, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { demoLogin, signIn, signUp, type AuthState } from "./actions";
+import { demoLogin, erpSignInAction, signIn, signUp, type AuthState } from "./actions";
 
 export default function Login() {
-  const [mode, setMode] = useState<"in" | "up">("in");
-  const [state, action, pending] = useActionState(mode === "in" ? signIn : signUp, null as AuthState);
+  // Students log in with their MITE ERP account; email accounts are for staff and demos.
+  const [mode, setMode] = useState<"erp" | "in" | "up">("erp");
+  const [state, action, pending] = useActionState(mode === "erp" ? erpSignInAction : mode === "in" ? signIn : signUp, null as AuthState);
   const demo = process.env.NEXT_PUBLIC_DEMO === "1";
   return (
     <main className="min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
@@ -32,10 +33,20 @@ export default function Login() {
         <div className="flex-1 grid place-items-center">
           <div className="w-full max-w-sm space-y-8">
             <div>
-              <p className="label mb-2">{mode === "in" ? "Welcome back" : "New account"}</p>
-              <h1 className="display text-[40px]">{mode === "in" ? "Log in" : "Sign up"}</h1>
+              <p className="label mb-2">{mode === "erp" ? "Students" : mode === "in" ? "Staff and demo accounts" : "New account"}</p>
+              <h1 className="display text-[40px]">{mode === "up" ? "Sign up" : "Log in"}</h1>
+              {mode === "erp" && <p className="text-ink-2 mt-2">Use your MITE ERP login. ClassPilot checks it with the ERP and brings in your attendance and timetable.</p>}
             </div>
-            <form action={action} className="space-y-4">
+            {mode === "erp" ? (
+            <form key="erp" action={action} className="space-y-4">
+              <div className="field"><label htmlFor="username" className="label">USN or college email</label><input id="username" name="username" required className="input" autoComplete="username" autoCapitalize="characters" spellCheck={false} /></div>
+              <div className="field"><label htmlFor="erp-password" className="label">ERP password</label><input id="erp-password" name="password" type="password" required className="input" autoComplete="current-password" /></div>
+              {state?.error && <p role="alert" className="text-bad text-[15px]">{state.error}</p>}
+              <button className="btn w-full" disabled={pending}>{pending ? "Checking with the ERP…" : "Log in with MITE ERP"}</button>
+              <p className="mono text-[11px] text-muted">Your ERP password is stored encrypted and used only to sync your data from the ERP.</p>
+            </form>
+            ) : (
+            <form key={mode} action={action} className="space-y-4">
               {mode === "up" && <div className="field"><label htmlFor="name" className="label">Name</label><input id="name" name="name" className="input" autoComplete="name" /></div>}
               <div className="field"><label htmlFor="email" className="label">College email</label><input id="email" name="email" type="email" required className="input" autoComplete="email" /></div>
               <div className="field"><label htmlFor="password" className="label">Password</label><input id="password" name="password" type="password" required minLength={6} className="input" autoComplete={mode === "in" ? "current-password" : "new-password"} /></div>
@@ -43,9 +54,12 @@ export default function Login() {
               {state?.info && <p role="status" className="text-ok text-[15px]">{state.info}</p>}
               <button className="btn w-full" disabled={pending}>{pending ? "Please wait…" : mode === "in" ? "Log in" : "Create account"}</button>
             </form>
-            <button type="button" className="link min-h-11" onClick={() => setMode(mode === "in" ? "up" : "in")}>
-              {mode === "in" ? "New here? Create an account" : "Have an account? Log in"}
-            </button>
+            )}
+            <div className="flex flex-wrap gap-x-6">
+              {mode !== "erp" && <button type="button" className="link min-h-11" onClick={() => setMode("erp")}>Student? Log in with MITE ERP</button>}
+              {mode !== "in" && <button type="button" className="link min-h-11" onClick={() => setMode("in")}>Staff or demo account</button>}
+              {mode === "in" && <button type="button" className="link min-h-11" onClick={() => setMode("up")}>Create an account</button>}
+            </div>
             {demo && (
               <div className="pt-6 border-t border-line space-y-3">
                 <p className="label">Demo accounts</p>

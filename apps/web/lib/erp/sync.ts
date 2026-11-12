@@ -1,6 +1,7 @@
 import { decrypt, type Sealed } from "@/lib/crypto";
 import { ErpAuthError, erpLogin, fetchErp } from "./client";
 import { mapErp } from "./map";
+import type { ErpRaw } from "./types";
 import { loadSnapshot } from "./snapshot";
 import { todayIST, type TemplateSlot } from "@classpilot/core";
 
@@ -17,11 +18,12 @@ export type SyncResult =
 
 export const syncUser = async (
   userId: string, store: SyncStore,
-  opts: { snapshot?: boolean; login?: typeof erpLogin; today?: string; creds?: { usn: string; password: string } } = {},
+  opts: { snapshot?: boolean; login?: typeof erpLogin; today?: string; creds?: { usn: string; password: string }; raw?: ErpRaw } = {},
 ): Promise<SyncResult> => {
   const today = opts.today ?? todayIST();
-  let raw;
-  if (opts.snapshot) raw = loadSnapshot();
+  let raw: ErpRaw;
+  if (opts.raw) raw = opts.raw; // already fetched (ERP sign-in): don't log in twice
+  else if (opts.snapshot) raw = loadSnapshot();
   else {
     // New credentials are tried first; the caller stores them only if this succeeds.
     const stored = opts.creds ? null : await store.getCreds(userId);
