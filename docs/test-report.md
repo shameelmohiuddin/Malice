@@ -109,3 +109,21 @@ I ran the app as each kind of user (logged out, student, teacher, and a student 
 | M5 | "Last sync: never" after a demo sync | Store `profiles.synced_at` | API |
 | M6 | Extra classes out of order | Sort after merging | API and automated test |
 | M8 | Teacher could store any link directly in the database | Database rule: Classroom links only | Migration applied |
+
+---
+
+# Round 2: the editorial redesign and the official timetable (12 Nov 2026, afternoon)
+
+I re-ran the main checks on the current build (the editorial frontend plus the official 5CS3 timetable) as a student and as a teacher, on desktop and at phone width (375 px). Automated tests: 41 core and 18 web, all passing, and both apps type-check cleanly. Everything I created in the live database during testing (a deadline and a cancellation) was removed afterwards.
+
+| ID | Problem | Fix |
+|---|---|---|
+| R1 | The redesigned dashboard had lost the per-class skip advice, which is the app's main promise | "OK to skip", "Risky" and "Don't skip" tags on upcoming classes and on the Next-class card |
+| R2 | The assistant listed non-credit sessions as raw codes (`CP-PLACE`) | Course titles are passed to the assistant ("Placement Training") |
+| R3 | "Next holiday" answered with PTM-1, which isn't a holiday | Holiday questions return only holidays and look ahead the whole semester |
+| R4 | The teacher console scrolled sideways on phones | The grid columns can shrink, and the deadline form stacks |
+| R5 | A teacher's deadline was always tagged with a subject, defaulting to "Arts - III" | A "Whole class" option, which is the default, and full subject names instead of codes like "IT"/"II" |
+| R6 | Teachers could cancel classes that had already finished | The UI shows "Done", and the API refuses |
+| R7 | Desktop nav labels wrapped onto two lines | Labels stay on one line, and the name is hidden at mid widths |
+| R8 | Class-wide deadlines were readable by every section | Database rule limits them to their own section (migration `0005`; **it still has to be applied to the live project**) |
+| R9 | Each sync overwrote the curated course titles with the ERP's names | Sync only adds new course codes |
