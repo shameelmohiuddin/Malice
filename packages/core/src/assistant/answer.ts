@@ -36,7 +36,9 @@ const isLab = (name: string) => /\b(lab|laboratory)\b/i.test(name);
 const labelFor = (s: CourseStats, text: string) => {
   const tokens = normalize(text);
   const hit = acronyms(s.name).find((a) => tokens.includes(a));
-  return hit ? hit.toUpperCase() : s.name;
+  if (!hit) return s.name;
+  // "cn lab" → the acronym without the lab letter, then "lab" ("CN lab").
+  return isLab(s.name) && !hit.endsWith("l") ? `${hit.toUpperCase()} lab` : isLab(s.name) ? `${hit.slice(0, -1).toUpperCase()} lab` : hit.toUpperCase();
 };
 
 /** The lab course that pairs with a theory course (Computer Networks ↔ Computer Networks Laboratory). */
@@ -54,7 +56,9 @@ const canSkipLine = (s: CourseStats, label: string, all: CourseStats[], min: num
       ? `You can't skip any ${label} classes. Attend the next ${need} to get back to ${Math.round(min * 100)}%.`
       : `You can't skip the next ${label} class.`;
   }
-  const base = `You can skip the next ${n} ${label} ${n === 1 ? "class" : "classes"}`;
+  const unit = isLab(s.name) ? (n === 1 ? "session" : "sessions") : n === 1 ? "class" : "classes";
+  const name = isLab(s.name) && !/lab(oratory)?$/i.test(label) ? `${label} lab` : label;
+  const base = `You can skip the next ${n} ${name} ${unit}`;
   const lab = labFor(s, all);
   if (!lab) return `${base}.`;
   const l = safeToMiss(lab.present, lab.held, min);

@@ -49,4 +49,8 @@ export const isClassroomUrl = (s: unknown): s is string => {
   try { const u = new URL(String(s)); return u.protocol === "https:" && u.hostname === "classroom.google.com"; } catch { return false; }
 };
 
+/** Two HH:MM ranges overlap (touching ends do not). */
+export const overlaps = (aStart: string, aEnd: string, bStart: string, bEnd: string): boolean =>
+  parseHHMM(aStart) < parseHHMM(bEnd) && parseHHMM(bStart) < parseHHMM(aEnd);
+
 export const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];

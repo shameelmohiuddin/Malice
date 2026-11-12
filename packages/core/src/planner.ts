@@ -78,5 +78,5 @@ export const mergeOverrides = (slots: TimetableSlot[], overrides: ScheduleOverri
       out.push({ date: o.date, start: o.start, end: o.end, courseCode: o.courseCode, kind: "EXTRA", room: o.room, cancelled: false, extra: true });
     }
   }
-  return out;
+  return out.sort((a, b) => (a.date === b.date ? parseHHMM(a.start) - parseHHMM(b.start) : a.date < b.date ? -1 : 1));
 };

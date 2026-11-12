@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { classAdvice, overall, pct, parseHHMM, prettyDate } from "@classpilot/core";
+import { classAdvice, nowMinutesIST, overall, pct, parseHHMM, prettyDate } from "@classpilot/core";
 import { AttendanceCard } from "@/components/AttendanceCard";
 import { Chip, ClassroomLink, fmt } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
@@ -41,7 +41,7 @@ export default async function Dashboard() {
                   <span className="tabular-nums text-muted w-24 shrink-0">{t.start}–{t.end}</span>
                   <span className={`flex-1 min-w-0 truncate ${t.cancelled ? "line-through text-muted" : "font-medium"}`}>{s?.name ?? t.courseCode}</span>
                   {t.extra && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-accent/15 text-accent">Extra</span>}
-                  {t.cancelled ? <span className="text-[11px] font-semibold text-muted">Cancelled</span> : s && <Chip advice={classAdvice(s, dueToday(s.code), min)} />}
+                  {t.cancelled ? <span className="text-[11px] font-semibold text-muted">Cancelled</span> : parseHHMM(t.end) <= nowMinutesIST() ? <span className="text-[11px] text-muted">done</span> : s && <Chip advice={classAdvice(s, dueToday(s.code), min)} />}
                   <span className="hidden sm:inline"><ClassroomLink url={d.classroom[t.courseCode!]} /></span>
                 </li>
               );

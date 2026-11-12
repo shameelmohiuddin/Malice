@@ -19,7 +19,7 @@ export const courseView = (s: CourseStats, o: { min: number; deadlineToday: bool
   semester: projection(s, o.min),
 });
 
-export type TodayClass = TimetableSlot & { courseName: string; advice: Advice | null };
+export type TodayClass = TimetableSlot & { courseName: string; advice: Advice | null; past: boolean };
 
 export type DashboardView = {
   overall: { present: number; held: number; percent: number };
@@ -28,7 +28,7 @@ export type DashboardView = {
   today: TodayClass[];
 };
 
-export const dashboardView = (i: { stats: CourseStats[]; timetable: TimetableSlot[]; deadlines: Deadline[]; today: string; min: number }): DashboardView => {
+export const dashboardView = (i: { stats: CourseStats[]; timetable: TimetableSlot[]; deadlines: Deadline[]; today: string; min: number; nowMin?: number }): DashboardView => {
   const due = (code: string, date: string) => i.deadlines.some((d) => d.due === date && d.courseCode === code);
   const courses = i.stats.map((s) => courseView(s, { min: i.min, deadlineToday: due(s.code, i.today) })).sort((a, b) => a.percent - b.percent);
   const o = overall(i.stats);
@@ -37,7 +37,8 @@ export const dashboardView = (i: { stats: CourseStats[]; timetable: TimetableSlo
     .sort((a, b) => parseHHMM(a.start) - parseHHMM(b.start))
     .map((t) => {
       const c = courses.find((x) => x.code === t.courseCode);
-      return { ...t, courseName: c?.name ?? t.courseCode!, advice: t.cancelled || !c ? null : c.advice };
+      const past = i.nowMin !== undefined && parseHHMM(t.end) <= i.nowMin;
+      return { ...t, courseName: c?.name ?? t.courseCode!, past, advice: t.cancelled || past || !c ? null : c.advice };
     });
   return {
     overall: { present: o.present, held: o.held, percent: pct(o.present, o.held) },

@@ -1,4 +1,4 @@
-import { addDays, classAdvice, isISODate, weekday } from "@classpilot/core";
+import { addDays, classAdvice, isISODate, nowMinutesIST, parseHHMM, weekday } from "@classpilot/core";
 import { api, okJson } from "@/lib/api";
 import { loadStudentDataFor } from "@/lib/data";
 import { ValidationError } from "@/lib/validate";
@@ -10,10 +10,12 @@ export const GET = api(async (ctx, req) => {
   const from = q.get("from") ?? monday, to = q.get("to") ?? addDays(monday, 5);
   if (!isISODate(from) || !isISODate(to) || to < from) throw new ValidationError("from/to must be YYYY-MM-DD with to >= from");
   const min = Number(d.profile.min_attendance ?? 0.75);
+  const now = nowMinutesIST();
   const slots = d.timetable.filter((t) => t.date >= from && t.date <= to).map((t) => {
     const s = d.stats.find((x) => x.code === t.courseCode);
-    return { ...t, courseName: s?.name ?? null, classroomUrl: t.courseCode ? d.classroom[t.courseCode] ?? null : null,
-      advice: s && !t.cancelled && t.date >= d.today ? classAdvice(s, d.deadlines.some((x) => x.due === t.date && x.courseCode === s.code), min) : null };
+    const past = t.date < d.today || (t.date === d.today && parseHHMM(t.end) <= now);
+    return { ...t, past, courseName: s?.name ?? null, classroomUrl: t.courseCode ? d.classroom[t.courseCode] ?? null : null,
+      advice: s && !t.cancelled && !past ? classAdvice(s, d.deadlines.some((x) => x.due === t.date && x.courseCode === s.code), min) : null };
   });
   const events = d.events.filter((e) => e.end >= from && e.start <= to);
   return okJson({ from, to, today: d.today, slots, events });

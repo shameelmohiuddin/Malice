@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addDays, isISODate, classAdvice, parseHHMM, prettyDate, weekday } from "@classpilot/core";
+import { addDays, isISODate, classAdvice, nowMinutesIST, parseHHMM, prettyDate, weekday } from "@classpilot/core";
 import { Chip, ClassroomLink } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
 
@@ -32,7 +32,7 @@ export default async function Timetable({ searchParams }: { searchParams: Promis
               {slots.map((t) => {
                 if (!t.courseCode) return <p key={t.start} className="text-[11px] text-muted border-y border-dashed border-line py-0.5 text-center">{t.kind.toLowerCase()} · {t.start}</p>;
                 const s = d.stats.find((x) => x.code === t.courseCode);
-                const past = day < d.today;
+                const past = day < d.today || (day === d.today && parseHHMM(t.end) <= nowMinutesIST());
                 return (
                   <div key={t.start + t.courseCode} className={`rounded-lg border border-line p-2 space-y-1 ${t.cancelled ? "opacity-60" : ""}`}>
                     <p className="text-[11px] text-muted tabular-nums">{t.start}–{t.end}{t.room ? ` · ${t.room}` : ""}</p>

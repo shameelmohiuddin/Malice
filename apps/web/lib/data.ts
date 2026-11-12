@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { Role } from "@/lib/roles";
 
-export type Profile = { id: string; name: string | null; role: Role; section: string | null; min_attendance: number };
+export type Profile = { id: string; name: string | null; role: Role; section: string | null; min_attendance: number; synced_at: string | null };
 
 type Supa = Awaited<ReturnType<typeof supabaseServer>>;
 export type Ctx = { supabase: Supa; user: { id: string; email?: string }; profile: Profile };
@@ -14,7 +14,7 @@ export const getContext = async (): Promise<Ctx | null> => {
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase.from("profiles").select("id,name,role,section,min_attendance").eq("id", user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("id,name,role,section,min_attendance,synced_at").eq("id", user.id).single();
   return { supabase, user, profile: profile as Profile };
 };
 
@@ -63,6 +63,6 @@ export const loadStudentDataFor = async ({ supabase, user, profile }: Ctx): Prom
     events: (ev.data ?? []).map(toEvent),
     deadlines: (dl.data ?? []).filter((d) => d.scope === "personal" || !d.section || d.section === section).map(toDeadline),
     classroom: Object.fromEntries((courses.data ?? []).filter((c) => c.classroom_url).map((c) => [c.code, c.classroom_url])),
-    lastSync: creds.data?.last_sync ?? null, lastError: creds.data?.last_error ?? null, hasCreds: !!creds.data,
+    lastSync: creds.data?.last_sync ?? profile.synced_at ?? null, lastError: creds.data?.last_error ?? null, hasCreds: !!creds.data,
   };
 };
