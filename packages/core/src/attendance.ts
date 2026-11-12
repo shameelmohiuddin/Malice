@@ -1,8 +1,7 @@
 import type { Advice, CourseStats } from "./types";
 
-/** MITE: 85% is required; between 75% and 85% needs condonation; below 75% is not eligible. */
+/** MITE requires 85% attendance. */
 export const MIN_ATTENDANCE = 0.85;
-export const FLOOR_ATTENDANCE = 0.75;
 const r1 = (x: number) => Math.round(x * 10) / 10;
 const validMin = (min: number) => Number.isFinite(min) && min > 0 && min < 1;
 

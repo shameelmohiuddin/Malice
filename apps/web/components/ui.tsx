@@ -5,8 +5,7 @@ export const pctText = (n: number) => `${n.toFixed(1)}%`;
 const STATUS: Record<AttendanceStatus, { label: string; cls: string; dot: string }> = {
   clear: { label: "Clear", cls: "tag-ok", dot: "bg-ok" },
   close: { label: "Close to minimum", cls: "tag-warn", dot: "bg-warn" },
-  condonation: { label: "Condonation zone", cls: "tag-bad", dot: "bg-bad" },
-  below: { label: "Below 75% · not eligible", cls: "tag-bad", dot: "bg-bad" },
+  below: { label: "Below minimum", cls: "tag-bad", dot: "bg-bad" },
 };
 
 export const StatusTag = ({ percent, min }: { percent: number; min: number }) => {

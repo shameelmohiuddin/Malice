@@ -1,4 +1,4 @@
-import { classAdvice, costOfMiss, FLOOR_ATTENDANCE, MIN_ATTENDANCE, mustAttend, overall, pct, projection, safeToMiss } from "../attendance";
+import { classAdvice, costOfMiss, MIN_ATTENDANCE, mustAttend, overall, pct, projection, safeToMiss } from "../attendance";
 import { addDays, parseHHMM, weekday } from "../dates";
 import type { CalendarEvent, CourseStats, Deadline, TimetableSlot } from "../types";
 import { classify, type Intent } from "./intents";
@@ -88,12 +88,7 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
 
   switch (intent.kind) {
     case "attendance": {
-      if (stat) {
-        const p = pct(stat.present, stat.held);
-        const note = p < FLOOR_ATTENDANCE * 100 ? ` Below ${Math.round(FLOOR_ATTENDANCE * 100)}%: not eligible without improvement.`
-          : p < min * 100 ? ` Below ${Math.round(min * 100)}%: in the condonation zone.` : "";
-        return { text: `${label}: ${P(p)} (${stat.present}/${stat.held}).${note}` };
-      }
+      if (stat) return { text: `${label}: ${P(pct(stat.present, stat.held))} (${stat.present}/${stat.held}).` };
       const o = overall(data.stats);
       const lines = [...data.stats].sort((a, b) => pct(a.present, a.held) - pct(b.present, b.held))
         .map((s) => `• ${s.name}: ${P(pct(s.present, s.held))}`);

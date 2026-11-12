@@ -18,7 +18,7 @@ export function MinForm({ current }: { current: number }) {
     <form onSubmit={save} className="folio p-5 flex flex-wrap items-end gap-4">
       <div className="field w-40"><label htmlFor="min" className="label">Percent (75–95)</label><input id="min" type="number" min={75} max={95} step={1} value={value} onChange={(e) => setValue(e.target.value)} className="input num" aria-describedby="min-msg" /></div>
       <button className="btn" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
-      <p id="min-msg" className={`basis-full text-[15px] ${msg ? (msg.ok ? "text-ok" : "text-bad") : "text-ink-2"}`} role="status">{msg?.text ?? "MITE requires 85%. Between 75% and 85% needs condonation; below 75% you are not eligible."}</p>
+      <p id="min-msg" className={`basis-full text-[15px] ${msg ? (msg.ok ? "text-ok" : "text-bad") : "text-ink-2"}`} role="status">{msg?.text ?? "MITE requires 85%. Change it only if your course has a different rule."}</p>
     </form>
   );
 }

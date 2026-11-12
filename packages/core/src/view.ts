@@ -1,5 +1,5 @@
 // View-models: everything a UI needs, computed once, so any frontend (web, mobile, new design) just renders.
-import { classAdvice, costOfMiss, mustAttend, overall, pct, projection, safeToMiss, FLOOR_ATTENDANCE } from "./attendance";
+import { classAdvice, costOfMiss, mustAttend, overall, pct, projection, safeToMiss } from "./attendance";
 import { parseHHMM } from "./dates";
 import type { Advice, CourseStats, Deadline, TimetableSlot } from "./types";
 
@@ -65,7 +65,7 @@ export const shortName = (name: string): string => {
   return core.length < 2 ? name : lab ? `${acr} LAB` : acr;
 };
 
-export type AttendanceStatus = "clear" | "close" | "condonation" | "below";
-/** Standing: under the 75% floor (not eligible), under the minimum (condonation zone), within 5 points of it, or clear. */
+export type AttendanceStatus = "clear" | "close" | "below";
+/** Neutral standing: below the minimum, within 5 points of it, or clear. */
 export const attendanceStatus = (percent: number, min: number): AttendanceStatus =>
-  percent < FLOOR_ATTENDANCE * 100 ? "below" : percent < min * 100 ? "condonation" : percent < min * 100 + 5 ? "close" : "clear";
+  percent < min * 100 ? "below" : percent < min * 100 + 5 ? "close" : "clear";

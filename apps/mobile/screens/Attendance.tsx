@@ -9,7 +9,7 @@ export function Attendance({ b }: { b: Bundle }) {
   const min = Number(b.profile.min_attendance ?? MIN_ATTENDANCE);
   const o = overall(b.stats);
   const views = [...b.stats].sort((a, x) => a.name.localeCompare(x.name)).map((x) => courseView(x, { min, deadlineToday: false }));
-  const tone = { clear: "ok", close: "warn", condonation: "bad", below: "bad" } as const;
+  const tone = { clear: "ok", close: "warn", below: "bad" } as const;
   return (
     <ScrollView contentContainerStyle={s.screen}>
       <View style={{ gap: 6 }}>
