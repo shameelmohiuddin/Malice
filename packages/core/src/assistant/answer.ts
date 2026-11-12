@@ -1,4 +1,4 @@
-import { classAdvice, costOfMiss, mustAttend, overall, pct, safeToMiss } from "../attendance";
+import { classAdvice, costOfMiss, mustAttend, overall, pct, projection, safeToMiss } from "../attendance";
 import { addDays, parseHHMM, weekday } from "../dates";
 import type { CalendarEvent, CourseStats, Deadline, TimetableSlot } from "../types";
 import { classify, type Intent } from "./intents";
@@ -13,6 +13,8 @@ export type AssistantData = {
   classroom: Record<string, string>;
   min?: number; // student minimum, default 0.75
   names?: Record<string, string>; // course code → title, for sessions outside attendance (activities)
+  instructors?: Record<string, string>; // course code → instructor
+  advisor?: string | null; // class advisor
 };
 export type Reply = { text: string; navigate?: string; openUrl?: string; options?: string[] };
 
@@ -21,6 +23,9 @@ const DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export const prettyDate = (d: string) => `${DAY[weekday(d)]} ${+d.slice(8)} ${MON[+d.slice(5, 7) - 1]}`;
 
+const hm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+const EXAM = /\b(exam|examination|cie|gcie|test|tests|internal)\b|cie-|test-|-(?:1|2)md\b/i;
+
 export const HELP = [
   "How many classes can I skip in DBMS?",
   "What if I skip FSD?",
@@ -28,6 +33,10 @@ export const HELP = [
   "What's my attendance?",
   "When is my next class?",
   "Any events this week?",
+  "Who teaches DBMS?",
+  "When am I free tomorrow?",
+  "What's due this week?",
+  "When is the next holiday?",
   "Open calendar",
 ];
 
@@ -115,6 +124,95 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
       if (!next) return { text: "No upcoming classes." };
       return { text: `Next: ${nameOf(next.courseCode)}, ${prettyDate(next.date)} ${next.start}${next.room ? `, ${next.room}` : ""}.` };
     }
+    case "day_schedule": {
+      const date = intent.date ?? today;
+      const all = data.timetable.filter((t) => t.date === date && t.courseCode).sort((a, b) => parseHHMM(a.start) - parseHHMM(b.start));
+      if (intent.time !== undefined) {
+        const at = all.find((t) => parseHHMM(t.start) <= intent.time! && parseHHMM(t.end) > intent.time!);
+        return { text: at ? `${prettyDate(date)} ${hm(intent.time)}: ${nameOf(at.courseCode)}, ${at.start}–${at.end}${at.room ? `, ${at.room}` : ""}${at.cancelled ? " (cancelled)" : ""}.` : `No class at ${hm(intent.time)} on ${prettyDate(date)}.` };
+      }
+      const slots = all.filter((t) => !intent.subject || t.courseCode === intent.subject);
+      if (!slots.length) {
+        const off = data.events.find((e) => e.start <= date && e.end >= date && e.isHoliday && !e.cancelled);
+        return { text: `No${intent.subject ? ` ${label}` : ""} classes on ${prettyDate(date)}${off ? ` (${off.title})` : ""}.` };
+      }
+      return { text: [`${prettyDate(date)}:`, ...slots.map((t) => `• ${t.start}–${t.end} ${nameOf(t.courseCode)}${t.room ? `, ${t.room}` : ""}${t.cancelled ? " (cancelled)" : ""}`)].join("\n") };
+    }
+    case "free_time": {
+      const date = intent.date ?? today;
+      const busy = data.timetable.filter((t) => t.date === date && t.courseCode && !t.cancelled)
+        .map((t) => [parseHHMM(t.start), parseHHMM(t.end)] as const).sort((a, b) => a[0] - b[0]);
+      if (!busy.length) return { text: `No classes on ${prettyDate(date)}, so you're free all day.` };
+      if (intent.time !== undefined) {
+        const at = busy.find(([a, b]) => a <= intent.time! && b > intent.time!);
+        return { text: at ? `No, you have a class from ${hm(at[0])} to ${hm(at[1])}.` : `Yes, you're free at ${hm(intent.time)} on ${prettyDate(date)}.` };
+      }
+      const gaps: string[] = [];
+      let cur = busy[0][1];
+      for (const [a, b] of busy.slice(1)) { if (a - cur >= 30) gaps.push(`${hm(cur)}–${hm(a)}`); cur = Math.max(cur, b); }
+      const from = date === today ? Math.max(nowMin, 0) : 0;
+      const shown = gaps.filter((g) => parseHHMM(g.slice(6)) > from);
+      return { text: `${prettyDate(date)}: ${shown.length ? `free ${shown.join(", ")} and ` : ""}after ${hm(cur)}.` };
+    }
+    case "instructor": {
+      if (!stat) {
+        if (data.advisor && /advis|coordinat|class teacher|mentor/i.test(text)) return { text: `Your class advisor is ${data.advisor}.` };
+        return { text: "Which subject?", options: data.stats.map((s) => s.name) };
+      }
+      const who = data.instructors?.[stat.code];
+      return { text: who ? `${label} is taught by ${who}.` : `I don't have the instructor for ${label}.` };
+    }
+    case "room": {
+      const next = data.timetable
+        .filter((t) => t.courseCode && !t.cancelled && (!intent.subject || t.courseCode === intent.subject) && (!intent.date || t.date === intent.date)
+          && (t.date > today || (t.date === today && parseHHMM(t.end) > nowMin)))
+        .sort((a, b) => (a.date === b.date ? parseHHMM(a.start) - parseHHMM(b.start) : a.date < b.date ? -1 : 1))[0];
+      if (!next) return { text: intent.date ? `No${intent.subject ? ` ${label}` : ""} classes on ${prettyDate(intent.date)}.` : `No upcoming${intent.subject ? ` ${label}` : ""} classes.` };
+      return { text: next.room ? `${nameOf(next.courseCode)} on ${prettyDate(next.date)} at ${next.start} is in ${next.room}.` : `No room is listed for ${nameOf(next.courseCode)} on ${prettyDate(next.date)}.` };
+    }
+    case "deadlines": {
+      const to = intent.date ?? addDays(today, 60);
+      const list = data.deadlines.filter((d) => d.due >= (intent.date ?? today) && d.due <= to && (!intent.subject || d.courseCode === intent.subject))
+        .sort((a, b) => (a.due < b.due ? -1 : 1)).slice(0, 6);
+      if (!list.length) return { text: intent.date ? `Nothing due on ${prettyDate(intent.date)}.` : `No upcoming${intent.subject ? ` ${label}` : ""} deadlines.` };
+      return { text: list.map((d) => `• ${prettyDate(d.due)}: ${d.title} (${d.kind})`).join("\n") };
+    }
+    case "holidays": {
+      if (intent.date) {
+        const h = data.events.find((e) => e.start <= intent.date! && e.end >= intent.date! && e.isHoliday && !e.cancelled);
+        return { text: h ? `Yes, ${prettyDate(intent.date)} is a holiday (${h.title}).` : `No, ${prettyDate(intent.date)} is not a holiday.` };
+      }
+      const next = data.events.filter((e) => e.isHoliday && !e.cancelled && e.end >= today).sort((a, b) => (a.start < b.start ? -1 : 1));
+      if (!next.length) return { text: "No holidays coming up this semester." };
+      return { text: next.slice(0, /\bnext\b/i.test(text) ? 1 : 4).map((e) => `• ${prettyDate(e.start)}: ${e.title} (holiday)`).join("\n") };
+    }
+    case "exams": {
+      const q = text.toLowerCase();
+      const n = q.match(/\b(?:cie|test|internal)s?\s*-?\s*(\d)\b/)?.[1];
+      // Narrow to the exam the student named, if any; otherwise every upcoming exam-like event.
+      const want: RegExp | null = /make\s*-?\s*up/.test(q) ? /make-?up/i
+        : /\b(sem|semester|final|finals|end|see|theory)\b/.test(q) ? /theory examination|semester end/i
+        : /\bpractical\b/.test(q) ? /practical/i
+        : /\blab\b/.test(q) ? /laboratory test|lab test|practical/i
+        : /\bgcie\b/.test(q) ? /gcie/i
+        : /\bcie\b|\binternals?\b/.test(q) ? (n ? new RegExp(`\\b(cie|test)[^0-9]*${n}\\b`, "i") : /cie/i)
+        : null;
+      const upcoming = data.events.filter((e) => e.end >= today && !e.cancelled && EXAM.test(e.title)).sort((a, b) => (a.start < b.start ? -1 : 1));
+      const named = want ? upcoming.filter((e) => want.test(e.title)) : [];
+      const list = (named.length ? named : upcoming).slice(0, named.length ? 2 : 4);
+      if (!list.length) return { text: "No exams on the calendar yet." };
+      return { text: list.map((e) => `• ${e.start === e.end ? prettyDate(e.start) : `${prettyDate(e.start)} – ${prettyDate(e.end)}`}: ${e.title}`).join("\n") };
+    }
+    case "projection": {
+      const line = (s: CourseStats, name: string) => {
+        const p = projection(s, min);
+        return `${name}: ${p.remaining} classes left; attend them all and you finish at ${P(p.finalIfAllAttended)}; you can miss ${p.canMissRemaining} of them and stay at ${Math.round(min * 100)}%.`;
+      };
+      if (stat) return { text: line(stat, label) };
+      return { text: data.stats.map((s) => `• ${line(s, s.name)}`).join("\n") };
+    }
+    case "out_of_scope":
+      return { text: "I can only help with your classes, attendance, deadlines and events.", options: HELP.slice(0, 4) };
     case "events": {
       const tokens = normalize(text);
       const holidays = tokens.some((t) => t === "holiday" || t === "holidays");

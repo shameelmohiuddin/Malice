@@ -14,7 +14,7 @@ export function Assistant({ b, go }: { b: Bundle; go: (tab: string) => void }) {
   const ref = useRef<any>(null);
   const send = (q: string) => {
     if (!q.trim()) return;
-    const r = ask(q, { ...b, min: Number(b.profile.min_attendance ?? 0.75) }, todayIST(), nowMinutesIST());
+    const r = ask(q, { ...b, min: Number(b.profile.min_attendance ?? 0.75), instructors: Object.fromEntries(Object.entries(b.catalog ?? {}).flatMap(([k, c]) => (c.instructor ? [[k, c.instructor]] : []))) }, todayIST(), nowMinutesIST());
     const retry = r.options && /which|pick/i.test(r.text) ? q : undefined;
     setMsgs((m) => [...m, { me: true, text: q }, { me: false, text: r.text, options: r.options, retry }]);
     setText("");
@@ -24,7 +24,7 @@ export function Assistant({ b, go }: { b: Bundle; go: (tab: string) => void }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={{ paddingHorizontal: 20, paddingTop: 20, gap: 6 }}>
-        <Text style={s.label}>On your phone · no AI API</Text>
+        <Text style={s.label}>ClassPilot AI · on your phone</Text>
         <Text style={s.display} accessibilityRole="header">Ask</Text>
       </View>
       <ScrollView ref={ref} onContentSizeChange={() => ref.current?.scrollToEnd()} contentContainerStyle={{ padding: 20, gap: 10 }}>

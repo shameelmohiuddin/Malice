@@ -67,7 +67,7 @@ export function Assistant({ data }: { data: AssistantData }) {
           className="fixed z-40 bottom-24 right-4 left-4 sm:left-auto sm:w-[420px] max-h-[72vh] flex flex-col bg-card border border-line-strong shadow-[3px_3px_0_0_var(--ink)]" style={{ borderColor: "var(--line-strong)" }}>
           <div className="index-band px-4 pt-4">
             <span className="label">Assistant</span>
-            <span className="label">On-device · no AI API</span>
+            <span className="label">ClassPilot AI · runs on your device</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3 text-[15px]" aria-live="polite">
             {msgs.map((m, i) => (

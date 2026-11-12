@@ -6,7 +6,8 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "train": "tsx training/train.ts"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
