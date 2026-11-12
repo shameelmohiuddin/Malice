@@ -31,6 +31,7 @@ function Login() {
   const { c, s } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const go = async () => {
@@ -51,8 +52,13 @@ function Login() {
         <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" style={s.input} accessibilityLabel="College email" placeholderTextColor={c.muted} />
       </View>
       <View style={{ gap: 6 }}>
-        <Text style={s.label}>Password</Text>
-        <TextInput value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" style={s.input} accessibilityLabel="Password" />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={s.label}>Password</Text>
+          <Pressable onPress={() => setShow(!show)} hitSlop={12} accessibilityRole="button" accessibilityLabel={show ? "Hide password" : "Show password"}>
+            <Text style={[s.label, { color: c.accent }]}>{show ? "Hide" : "Show"}</Text>
+          </Pressable>
+        </View>
+        <TextInput value={password} onChangeText={setPassword} secureTextEntry={!show} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" style={s.input} accessibilityLabel="Password" />
       </View>
       {err && <Text style={[s.body, { color: c.bad }]} accessibilityRole="alert">{err}</Text>}
       <Pressable onPress={go} style={[s.btn, busy && { opacity: 0.6 }]} disabled={busy} accessibilityRole="button">
