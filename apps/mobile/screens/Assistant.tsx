@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST } from "@classpilot/core";
+import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST, MIN_ATTENDANCE } from "@classpilot/core";
 import type { Bundle } from "../lib/sync";
 import { F, useTheme } from "./theme";
 
@@ -14,7 +14,7 @@ export function Assistant({ b, go }: { b: Bundle; go: (tab: string) => void }) {
   const ref = useRef<any>(null);
   const send = (q: string) => {
     if (!q.trim()) return;
-    const r = ask(q, { ...b, min: Number(b.profile.min_attendance ?? 0.75), instructors: Object.fromEntries(Object.entries(b.catalog ?? {}).flatMap(([k, c]) => (c.instructor ? [[k, c.instructor]] : []))) }, todayIST(), nowMinutesIST());
+    const r = ask(q, { ...b, min: Number(b.profile.min_attendance ?? MIN_ATTENDANCE), instructors: Object.fromEntries(Object.entries(b.catalog ?? {}).flatMap(([k, c]) => (c.instructor ? [[k, c.instructor]] : []))) }, todayIST(), nowMinutesIST());
     const retry = r.options && /which|pick/i.test(r.text) ? q : undefined;
     setMsgs((m) => [...m, { me: true, text: q }, { me: false, text: r.text, options: r.options, retry }]);
     setText("");

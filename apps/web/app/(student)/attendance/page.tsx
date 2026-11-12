@@ -1,10 +1,10 @@
-import { courseView, overall, pct, shortName } from "@classpilot/core";
+import { courseView, overall, pct, shortName, MIN_ATTENDANCE } from "@classpilot/core";
 import { ClassroomLink, pctText, SectionHead, StatusTag } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
 
 export default async function Attendance() {
   const d = await loadStudentData();
-  const min = Number(d.profile.min_attendance ?? 0.75);
+  const min = Number(d.profile.min_attendance ?? MIN_ATTENDANCE);
   const o = overall(d.stats);
   const views = [...d.stats].sort((a, b) => a.name.localeCompare(b.name)).map((s) => courseView(s, { min, deadlineToday: false }));
   return (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addDays, nowMinutesIST, overall, parseHHMM, pct, planStudy, prettyDate, shortName } from "@classpilot/core";
+import { addDays, nowMinutesIST, overall, parseHHMM, pct, planStudy, prettyDate, shortName, MIN_ATTENDANCE } from "@classpilot/core";
 import { AskBar } from "@/components/AskBar";
 import { ClassroomLink, describe, Empty, pctText, SectionHead, StatusDot, StatusTag } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
@@ -11,7 +11,7 @@ const until = (mins: number) => (mins < 60 ? `in ${mins} min` : `in ${Math.floor
 
 export default async function Today() {
   const d = await loadStudentData();
-  const min = Number(d.profile.min_attendance ?? 0.75);
+  const min = Number(d.profile.min_attendance ?? MIN_ATTENDANCE);
   const now = nowMinutesIST();
   const first = (d.profile.name ?? "").split(/\s+/)[0] || "there";
   const greeting = now < 12 * 60 ? "Good morning" : now < 17 * 60 ? "Good afternoon" : "Good evening";

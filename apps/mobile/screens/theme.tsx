@@ -62,6 +62,6 @@ export const useTheme = () => {
 };
 
 export const pctText = (n: number) => `${n.toFixed(1)}%`;
-export const statusColor = (c: Palette, st: AttendanceStatus) => (st === "below" ? c.bad : st === "close" ? c.warn : c.ok);
-export const STATUS_LABEL: Record<AttendanceStatus, string> = { clear: "Clear", close: "Close to minimum", below: "Below minimum" };
+export const statusColor = (c: Palette, st: AttendanceStatus) => (st === "below" || st === "condonation" ? c.bad : st === "close" ? c.warn : c.ok);
+export const STATUS_LABEL: Record<AttendanceStatus, string> = { clear: "Clear", close: "Close to minimum", condonation: "Condonation zone", below: "Below 75% · not eligible" };
 export { attendanceStatus };

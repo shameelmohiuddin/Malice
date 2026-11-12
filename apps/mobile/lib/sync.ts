@@ -1,4 +1,4 @@
-import { addDays, adjustPlanned, mergeOverrides, shortName, todayIST, type AssistantData, type CourseStats } from "@classpilot/core";
+import { addDays, adjustPlanned, mergeOverrides, shortName, todayIST, type AssistantData, type CourseStats, MIN_ATTENDANCE } from "@classpilot/core";
 import { supabase } from "./supabase";
 import { getCache, putCache } from "./db";
 
@@ -37,7 +37,7 @@ export const syncDown = async (userId: string): Promise<void> => {
   const names = new Map((courses.data ?? []).map((c: any) => [c.code, c.name]));
   const overrides = (ov.data ?? []).map((r: any) => ({ id: r.id, courseCode: r.course_code, date: r.date, start: r.start, end: r.end, action: r.action, room: r.room }));
   const bundle: Bundle = {
-    profile, min: Number(profile.min_attendance ?? 0.75), advisor: sec.data?.class_advisor ?? null,
+    profile, min: Number(profile.min_attendance ?? MIN_ATTENDANCE), advisor: sec.data?.class_advisor ?? null,
     catalog: Object.fromEntries((courses.data ?? []).map((c: any) => [c.code, { name: c.name, instructor: c.instructor ?? null, counts: c.counts_attendance !== false }])),
     names: Object.fromEntries((courses.data ?? []).map((c: any) => [c.code, c.name])),
     stats: adjustPlanned((stats.data ?? []).map((r: any): CourseStats => ({ code: r.course_code, name: names.get(r.course_code) ?? r.course_code, present: r.present, held: r.held, plannedTotal: r.planned_total })), overrides, today),

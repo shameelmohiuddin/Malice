@@ -32,4 +32,5 @@ export const D: AssistantData = {
     { id: "e1", title: "PTM-1", start: "2026-11-14", end: "2026-11-14", category: "ACADEMIC DEADLINE", isHoliday: false, cancelled: false },
   ],
   deadlines: [], classroom: { "23CSPE311": "https://classroom.google.com/c/abc" },
+  min: 0.75, // these fixtures were written for a 75% minimum; the 85%/75% rule has its own tests
 };

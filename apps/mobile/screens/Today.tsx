@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { addDays, nowMinutesIST, overall, parseHHMM, pct, planStudy, prettyDate, shortName, todayIST } from "@classpilot/core";
+import { addDays, nowMinutesIST, overall, parseHHMM, pct, planStudy, prettyDate, shortName, todayIST, MIN_ATTENDANCE } from "@classpilot/core";
 import { describe, type Bundle } from "../lib/sync";
 import { ClassroomLink, Dot, Empty, SectionHead, Tag } from "./parts";
 import { attendanceStatus, F, pctText, statusColor, useTheme } from "./theme";
@@ -11,7 +11,7 @@ export function Today({ b, go }: { b: Bundle; go: (tab: string) => void }) {
   const { c, s } = useTheme();
   const today = todayIST();
   const now = nowMinutesIST();
-  const min = Number(b.profile.min_attendance ?? 0.75);
+  const min = Number(b.profile.min_attendance ?? MIN_ATTENDANCE);
   const info = (code: string | null) => describe(b, code);
   const name = (code: string | null) => info(code).full;
   const isClass = (t: { courseCode: string | null }) => !!t.courseCode && !info(t.courseCode).activity;

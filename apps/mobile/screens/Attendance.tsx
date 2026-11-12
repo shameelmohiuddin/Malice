@@ -1,15 +1,15 @@
 import { ScrollView, Text, View } from "react-native";
-import { courseView, overall, pct, shortName } from "@classpilot/core";
+import { courseView, overall, pct, shortName, MIN_ATTENDANCE } from "@classpilot/core";
 import type { Bundle } from "../lib/sync";
 import { ClassroomLink, Tag } from "./parts";
 import { attendanceStatus, F, pctText, STATUS_LABEL, useTheme } from "./theme";
 
 export function Attendance({ b }: { b: Bundle }) {
   const { c, s } = useTheme();
-  const min = Number(b.profile.min_attendance ?? 0.75);
+  const min = Number(b.profile.min_attendance ?? MIN_ATTENDANCE);
   const o = overall(b.stats);
   const views = [...b.stats].sort((a, x) => a.name.localeCompare(x.name)).map((x) => courseView(x, { min, deadlineToday: false }));
-  const tone = { clear: "ok", close: "warn", below: "bad" } as const;
+  const tone = { clear: "ok", close: "warn", condonation: "bad", below: "bad" } as const;
   return (
     <ScrollView contentContainerStyle={s.screen}>
       <View style={{ gap: 6 }}>

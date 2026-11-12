@@ -41,6 +41,6 @@ export const validateDeadline = (x: unknown) => {
 
 export const validateMin = (x: unknown) => {
   const n = Number(obj(x).minAttendance);
-  need(Number.isFinite(n) && n >= 50 && n <= 95, "minAttendance must be a percentage between 50 and 95");
+  need(Number.isFinite(n) && n >= 75 && n <= 95, "minAttendance must be a percentage between 75 and 95");
   return n / 100;
 };

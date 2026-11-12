@@ -1,4 +1,4 @@
-import { addDays, classAdvice, isISODate, nowMinutesIST, parseHHMM, weekday } from "@classpilot/core";
+import { addDays, classAdvice, isISODate, nowMinutesIST, parseHHMM, weekday, MIN_ATTENDANCE } from "@classpilot/core";
 import { api, okJson } from "@/lib/api";
 import { loadStudentDataFor } from "@/lib/data";
 import { ValidationError } from "@/lib/validate";
@@ -9,7 +9,7 @@ export const GET = api(async (ctx, req) => {
   const monday = addDays(d.today, -((weekday(d.today) + 6) % 7));
   const from = q.get("from") ?? monday, to = q.get("to") ?? addDays(monday, 5);
   if (!isISODate(from) || !isISODate(to) || to < from) throw new ValidationError("from/to must be YYYY-MM-DD with to >= from");
-  const min = Number(d.profile.min_attendance ?? 0.75);
+  const min = Number(d.profile.min_attendance ?? MIN_ATTENDANCE);
   const now = nowMinutesIST();
   const slots = d.timetable.filter((t) => t.date >= from && t.date <= to).map((t) => {
     const s = d.stats.find((x) => x.code === t.courseCode);

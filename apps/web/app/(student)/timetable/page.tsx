@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addDays, isISODate, nowMinutesIST, parseHHMM, pct, prettyDate, shortName, weekday } from "@classpilot/core";
+import { addDays, isISODate, nowMinutesIST, parseHHMM, pct, prettyDate, shortName, weekday, MIN_ATTENDANCE } from "@classpilot/core";
 import { ClassroomLink, describe, pctText, SectionHead, StatusDot } from "@/components/ui";
 import { loadStudentData } from "@/lib/data";
 
@@ -11,7 +11,7 @@ export default async function Timetable({ searchParams }: { searchParams: Promis
   const base = isISODate(week) ? week : d.today;
   const monday = addDays(base, -((weekday(base) + 6) % 7));
   const days = Array.from({ length: 6 }, (_, i) => addDays(monday, i));
-  const min = Number(d.profile.min_attendance ?? 0.75);
+  const min = Number(d.profile.min_attendance ?? MIN_ATTENDANCE);
   const now = nowMinutesIST();
   const info = (c: string | null) => describe(c, d.catalog, d.stats);
   const name = (c: string | null) => info(c).full;
