@@ -21,7 +21,7 @@ export const mapErp = (raw: ErpRaw, today: string): Mapped => {
 
   const noClass = new Set<string>();
   for (const e of raw.events)
-    if (e.is_holiday || (e.event_code && NO_CLASS_CODES.has(e.event_code)))
+    if (e.is_holiday || e.is_class_suspended || (e.event_code && NO_CLASS_CODES.has(e.event_code)))
       for (let d = e.start_date; d <= e.end_date; d = addDays(d, 1)) noClass.add(d);
 
   const logs: LogRow[] = raw.courses.flatMap((c) =>
@@ -51,7 +51,7 @@ export const mapErp = (raw: ErpRaw, today: string): Mapped => {
   // ERP-published entries (today and any future days the ERP returns).
   const erpDates = new Set(raw.timetable.map((t) => t.sessionDate));
   for (const t of raw.timetable)
-    timetable.push(slot(t.sessionDate, hhmm(t.startTime), hhmm(t.endTime), t.course?.courseCode ?? null, t.logType[0] ?? "THEORY", t.room.roomCode, t.isCancelled, t.entryId));
+    timetable.push(slot(t.sessionDate, hhmm(t.startTime), hhmm(t.endTime), t.course?.courseCode ?? null, t.logType?.[0] ?? "THEORY", t.room?.roomCode ?? null, !!t.isCancelled, t.entryId));
   // Future days the ERP hasn't published: repeat the weekly pattern.
   for (let d = today; d <= semEnd; d = addDays(d, 1)) {
     if (erpDates.has(d) || noClass.has(d)) continue;

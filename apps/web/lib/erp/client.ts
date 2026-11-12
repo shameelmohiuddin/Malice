@@ -53,20 +53,23 @@ const get = async <T>(token: string, path: string): Promise<T> => {
   return ((await r.json()) as { data: T }).data;
 };
 
+type Profile = {
+  student_id: string; usn_no: string; full_name: string; group_name: string | null;
+  academic_year_id: number; academic_term_id: number; term_master_id: number;
+};
+
 export const fetchErp = async (token: string, section = "5CS3"): Promise<ErpRaw> => {
-  const me = await get<{ studentId?: string; id?: string; usn?: string; name?: string; studentName?: string }>(token, "/profile/me");
-  const studentId = me.studentId ?? me.id ?? "";
-  const terms = await get<{ academicTermId: number; isCurrent: boolean; academicYearId: number; termMasterId: number }[]>(token, `/students/semesters?student_id=${studentId}`);
-  const term = terms.find((t) => t.isCurrent) ?? terms[terms.length - 1];
-  const cal = await get<{ months: { events: ApiEvent[] }[] }>(token, `/portal/calendar?academic_year_id=${term.academicYearId}&term_master_id=${term.termMasterId}`);
+  const me = await get<Profile>(token, "/profile/me");
+  if (!me?.student_id) throw new ErpDownError("ERP profile has no student_id (is this a student account?)");
+  const cal = await get<{ months: { events: ApiEvent[] }[] }>(token, `/portal/calendar?academic_year_id=${me.academic_year_id}&term_master_id=${me.term_master_id}`);
   const events = cal.months.flatMap((m) => m.events);
-  const start = events.find((e) => e.event_code === "CLASS_START")?.start_date ?? "2026-01-01";
-  const end = events.find((e) => e.event_code === "CLASS_END")?.start_date ?? todayIST();
   const today = todayIST();
-  const att = await get<{ courses: ApiCourse[] }[]>(token, `/attendance/session-logs/attendance?student_id=${studentId}&academic_term_id=${term.academicTermId}&from_date=${start}&to_date=${today}`);
-  const timetable = await get<ApiTimetableEntry[]>(token, `/faculty/timetable?studentUUID=${studentId}&from_date=${today}&to_date=${end}`);
+  const start = events.find((e) => e.event_code === "CLASS_START")?.start_date ?? today;
+  const end = events.find((e) => e.event_code === "CLASS_END")?.start_date ?? today;
+  const att = await get<{ courses: ApiCourse[] }[]>(token, `/attendance/session-logs/attendance?student_id=${me.student_id}&academic_term_id=${me.academic_term_id}&from_date=${start}&to_date=${today}`);
+  const timetable = await get<ApiTimetableEntry[]>(token, `/faculty/timetable?studentUUID=${me.student_id}&from_date=${today}&to_date=${end > today ? end : today}`);
   return {
-    student: { studentId, usn: me.usn ?? "", name: me.name ?? me.studentName ?? "", section: timetable.find((t) => t.group?.groupCode)?.group.groupCode ?? section },
-    courses: att[0]?.courses ?? [], timetable, events,
+    student: { studentId: me.student_id, usn: me.usn_no, name: me.full_name, section: me.group_name ?? section },
+    courses: att?.[0]?.courses ?? [], timetable: timetable ?? [], events,
   };
 };

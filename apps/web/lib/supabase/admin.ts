@@ -22,7 +22,11 @@ export const adminSyncStore = (): SyncStore => {
       }
     },
     async setStatus(userId, s) {
-      await db.from("erp_credentials").update({ last_sync: new Date().toISOString(), last_error: s.error ?? null }).eq("user_id", userId);
+      await db.from("erp_credentials").update(s.ok ? { last_sync: new Date().toISOString(), last_error: null } : { last_error: s.error ?? "Sync failed" }).eq("user_id", userId);
+    },
+    async deleteFutureTimetable(userId, fromDate) {
+      const { error } = await db.from("timetable").delete().eq("user_id", userId).gte("date", fromDate);
+      if (error) throw new Error(`timetable: ${error.message}`);
     },
   };
 };

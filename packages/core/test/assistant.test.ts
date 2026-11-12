@@ -44,3 +44,11 @@ describe("ask", () => {
     expect(ask("my attendance", D, T).text).toContain("Overall");
   });
 });
+
+describe("unknown subject with punctuation", () => {
+  it("asks instead of guessing", () => {
+    expect(classify("How many classes can I skip in quantum?", C, T)).toMatchObject({ clarify: expect.stringContaining("don't have") });
+    expect(classify("attendance in quantum physics?", C, T)).toMatchObject({ clarify: expect.stringContaining("don't have") });
+    expect(classify("How many classes can I skip in DBMS?", C, T)).toMatchObject({ kind: "can_skip", subject: "23CSPC302" });
+  });
+});

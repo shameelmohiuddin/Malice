@@ -72,7 +72,7 @@ export const classify = (text: string, courses: Course[], today: string): Intent
 
   // A subject was named ("in X", "for X") but we don't know it: say so instead of guessing.
   if (!subject && kind !== "help" && kind !== "open_section" && kind !== "events" && kind !== "should_skip_day") {
-    const named = text.toLowerCase().match(/\b(?:in|for|of)\s+([a-z][a-z0-9 ]{2,})$/);
+    const named = tokens.join(" ").match(/\b(?:in|for|of)\s+([a-z][a-z0-9 ]{2,})$/);
     if (named && !extractDate(normalize(named[1]), today)) {
       return { clarify: `I don't have a subject called "${named[1].trim()}". Pick one:`, options: courses.map((c) => c.name) };
     }
