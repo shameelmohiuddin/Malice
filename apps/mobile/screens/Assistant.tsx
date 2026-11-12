@@ -2,18 +2,19 @@ import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST } from "@classpilot/core";
 import type { Bundle } from "../lib/sync";
-import { C, s } from "./theme";
+import { F, useTheme } from "./theme";
 
 type Msg = { me: boolean; text: string; options?: string[]; retry?: string };
-const TABS: Record<string, string> = { "/dashboard": "home", "/timetable": "timetable", "/calendar": "calendar", "/planner": "calendar", "/settings": "home" };
+const TABS: Record<string, string> = { "/dashboard": "today", "/timetable": "timetable", "/calendar": "calendar", "/planner": "today", "/settings": "today" };
 
 export function Assistant({ b, go }: { b: Bundle; go: (tab: string) => void }) {
+  const { c, s } = useTheme();
   const [text, setText] = useState("");
-  const [msgs, setMsgs] = useState<Msg[]>([{ me: false, text: "Ask about attendance, skips, classes or events.", options: HELP.slice(0, 4) }]);
+  const [msgs, setMsgs] = useState<Msg[]>([{ me: false, text: "Ask about your classes, attendance, deadlines or events. Works offline.", options: HELP.slice(0, 4) }]);
   const ref = useRef<any>(null);
   const send = (q: string) => {
     if (!q.trim()) return;
-    const r = ask(q, b, todayIST(), nowMinutesIST());
+    const r = ask(q, { ...b, min: Number(b.profile.min_attendance ?? 0.75) }, todayIST(), nowMinutesIST());
     const retry = r.options && /which|pick/i.test(r.text) ? q : undefined;
     setMsgs((m) => [...m, { me: true, text: q }, { me: false, text: r.text, options: r.options, retry }]);
     setText("");
@@ -22,15 +23,21 @@ export function Assistant({ b, go }: { b: Bundle; go: (tab: string) => void }) {
   };
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView ref={ref} onContentSizeChange={() => ref.current?.scrollToEnd()} contentContainerStyle={{ padding: 16, gap: 8 }}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 20, gap: 6 }}>
+        <Text style={s.label}>On your phone · no AI API</Text>
+        <Text style={s.display} accessibilityRole="header">Ask</Text>
+      </View>
+      <ScrollView ref={ref} onContentSizeChange={() => ref.current?.scrollToEnd()} contentContainerStyle={{ padding: 20, gap: 10 }}>
         {msgs.map((m, i) => (
-          <View key={i} style={{ alignItems: m.me ? "flex-end" : "flex-start" }}>
-            <Text style={{ backgroundColor: m.me ? C.accent : C.card, color: m.me ? "white" : C.ink, borderColor: C.line, borderWidth: m.me ? 0 : 1, padding: 10, borderRadius: 14, maxWidth: "90%", overflow: "hidden" }}>{m.text}</Text>
+          <View key={i} style={{ alignItems: m.me ? "flex-end" : "flex-start", gap: 8 }}>
+            <View style={[{ maxWidth: "90%", paddingHorizontal: 12, paddingVertical: 9 }, m.me ? { backgroundColor: c.ink } : s.plate]}>
+              <Text style={[s.body, m.me && { color: c.bg }]}>{m.text}</Text>
+            </View>
             {m.options && (
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
                 {m.options.map((o) => (
-                  <Pressable key={o} onPress={() => send(m.retry ? `${m.retry} ${o}` : o)} style={{ borderColor: C.line, borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: C.card }}>
-                    <Text style={{ fontSize: 12, color: C.ink }}>{o}</Text>
+                  <Pressable key={o} accessibilityRole="button" onPress={() => send(m.retry ? `${m.retry} ${o}` : o)} style={[s.tag, { minHeight: 34, justifyContent: "center", backgroundColor: c.card }]}>
+                    <Text style={[s.tagText, { fontFamily: F.mono, letterSpacing: 0.4, textTransform: "none", fontSize: 12, color: c.ink }]}>{o}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -38,9 +45,10 @@ export function Assistant({ b, go }: { b: Bundle; go: (tab: string) => void }) {
           </View>
         ))}
       </ScrollView>
-      <View style={{ flexDirection: "row", gap: 8, padding: 12, borderTopWidth: 1, borderColor: C.line }}>
-        <TextInput value={text} onChangeText={setText} onSubmitEditing={() => send(text)} placeholder="e.g. can I skip tomorrow?" style={[s.input, { flex: 1 }]} returnKeyType="send" />
-        <Pressable onPress={() => send(text)} style={[s.btn, { justifyContent: "center" }]}><Text style={s.btnText}>Ask</Text></Pressable>
+      <View style={{ flexDirection: "row", gap: 8, padding: 12, borderTopWidth: 1, borderColor: c.line, backgroundColor: c.bg }}>
+        <TextInput value={text} onChangeText={setText} onSubmitEditing={() => send(text)} placeholder="When is my next lab?" placeholderTextColor={c.muted}
+          style={[s.input, { flex: 1 }]} returnKeyType="send" accessibilityLabel="Question" />
+        <Pressable onPress={() => send(text)} style={s.btn} accessibilityRole="button"><Text style={s.btnText}>Ask</Text></Pressable>
       </View>
     </KeyboardAvoidingView>
   );

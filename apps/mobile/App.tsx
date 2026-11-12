@@ -3,20 +3,33 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-nativ
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import NetInfo from "@react-native-community/netinfo";
+import { useFonts } from "expo-font";
+// Per-weight imports so only the 9 faces used are bundled.
+import { PlayfairDisplay_600SemiBold } from "@expo-google-fonts/playfair-display/600SemiBold";
+import { PlayfairDisplay_600SemiBold_Italic } from "@expo-google-fonts/playfair-display/600SemiBold_Italic";
+import { PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display/700Bold";
+import { PlayfairDisplay_700Bold_Italic } from "@expo-google-fonts/playfair-display/700Bold_Italic";
+import { Newsreader_400Regular } from "@expo-google-fonts/newsreader/400Regular";
+import { Newsreader_400Regular_Italic } from "@expo-google-fonts/newsreader/400Regular_Italic";
+import { Newsreader_600SemiBold } from "@expo-google-fonts/newsreader/600SemiBold";
+import { SpaceMono_400Regular } from "@expo-google-fonts/space-mono/400Regular";
+import { SpaceMono_700Bold } from "@expo-google-fonts/space-mono/700Bold";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
 import { loadBundle, syncDown, type Bundle } from "./lib/sync";
 import { clearCache } from "./lib/db";
-import { Home } from "./screens/Home";
+import { Today } from "./screens/Today";
 import { Timetable } from "./screens/Timetable";
 import { Calendar } from "./screens/Calendar";
+import { Attendance } from "./screens/Attendance";
 import { Assistant } from "./screens/Assistant";
-import { C, s } from "./screens/theme";
+import { F, ThemeProvider, useTheme } from "./screens/theme";
 
-const TABS = [["home", "Home"], ["timetable", "Timetable"], ["calendar", "Calendar"], ["assistant", "Assistant"]] as const;
+const TABS = [["today", "Today"], ["timetable", "Week"], ["calendar", "Calendar"], ["attendance", "Attendance"], ["assistant", "Ask"]] as const;
 
 function Login() {
-  const [email, setEmail] = useState("student1@demo.classpilot");
+  const { c, s } = useTheme();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -27,23 +40,35 @@ function Login() {
     if (error) setErr(error.message);
   };
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12 }}>
-      <Text style={{ fontSize: 34, fontWeight: "800", color: C.ink }}>Class<Text style={{ color: C.accent }}>Pilot</Text></Text>
-      <Text style={s.muted}>Know exactly when you can skip, and when you can't.</Text>
-      <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="Email" style={s.input} />
-      <TextInput value={password} onChangeText={setPassword} secureTextEntry placeholder="Password" style={s.input} />
-      {err && <Text style={{ color: C.must }}>{err}</Text>}
-      <Pressable onPress={go} style={s.btn} disabled={busy}><Text style={s.btnText}>{busy ? "Logging in…" : "Log in"}</Text></Pressable>
+    <View style={{ flex: 1, padding: 24, justifyContent: "center", gap: 18 }}>
+      <View style={{ gap: 10, marginBottom: 12 }}>
+        <Text style={[s.label, { color: c.accent }]}>MITE · from your ERP</Text>
+        <Text style={[s.display, { fontSize: 44, lineHeight: 48 }]}>Class<Text style={{ fontFamily: F.displayItalic }}>Pilot</Text></Text>
+        <Text style={s.body2}>Your timetable, attendance and deadlines in one place, even offline.</Text>
+      </View>
+      <View style={{ gap: 6 }}>
+        <Text style={s.label}>College email</Text>
+        <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" style={s.input} accessibilityLabel="College email" placeholderTextColor={c.muted} />
+      </View>
+      <View style={{ gap: 6 }}>
+        <Text style={s.label}>Password</Text>
+        <TextInput value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" style={s.input} accessibilityLabel="Password" />
+      </View>
+      {err && <Text style={[s.body, { color: c.bad }]} accessibilityRole="alert">{err}</Text>}
+      <Pressable onPress={go} style={[s.btn, busy && { opacity: 0.6 }]} disabled={busy} accessibilityRole="button">
+        <Text style={s.btnText}>{busy ? "Logging in…" : "Log in"}</Text>
+      </Pressable>
     </View>
   );
 }
 
-export default function App() {
+function Shell() {
+  const { c, s, dark, toggle } = useTheme();
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
-  const [tab, setTab] = useState("home");
+  const [tab, setTab] = useState("today");
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
@@ -54,15 +79,14 @@ export default function App() {
   }, []);
 
   const refresh = useCallback(async () => {
-    const c = await loadBundle();
-    if (c) { setBundle(c.value); setUpdatedAt(c.updatedAt); }
+    const cached = await loadBundle();
+    if (cached) { setBundle(cached.value); setUpdatedAt(cached.updatedAt); }
   }, []);
-
   const sync = useCallback(async () => {
     if (!session) return;
     setSyncing(true);
     try { await syncDown(session.user.id); setSyncError(null); }
-    catch (e) { setSyncError((e as Error).message || "Couldn't reach the server"); /* keep cached data */ }
+    catch (e) { setSyncError((e as Error).message || "Couldn't reach the server"); }
     await refresh();
     setSyncing(false);
   }, [session, refresh]);
@@ -73,45 +97,79 @@ export default function App() {
     setOnline((was) => { if (on && !was) sync(); return on; });
   }), [sync]);
 
-  if (session === undefined) return <View style={{ flex: 1, justifyContent: "center" }}><ActivityIndicator /></View>;
   const time = updatedAt ? new Date(updatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "never";
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
-        <StatusBar style="dark" />
-        {!session ? <Login /> : (
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
+      <StatusBar style={dark ? "light" : "dark"} />
+      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, height: 60, borderBottomWidth: 1, borderColor: c.line, gap: 4 }}>
+        <Text style={[s.headline, { fontSize: 21, flex: 1 }]}>ClassPilot</Text>
+        <Pressable onPress={toggle} accessibilityRole="button" accessibilityLabel={dark ? "Switch to light mode" : "Switch to dark mode"} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontSize: 17, color: c.ink2 }}>{dark ? "☀" : "☾"}</Text>
+        </Pressable>
+        {session && (
           <>
-            <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderColor: C.line }}>
-              <Text style={{ fontWeight: "800", fontSize: 18, color: C.ink, flex: 1 }}>Class<Text style={{ color: C.accent }}>Pilot</Text></Text>
-              <Pressable onPress={sync}><Text style={s.muted}>{syncing ? "Syncing…" : "Sync"}</Text></Pressable>
-              <Pressable onPress={async () => { await clearCache(); setBundle(null); await supabase.auth.signOut(); }} style={{ marginLeft: 14 }}><Text style={s.muted}>Log out</Text></Pressable>
-            </View>
-            {!online && <Text style={{ backgroundColor: "#fef3c7", color: "#92400e", padding: 8, textAlign: "center", fontWeight: "600" }}>Offline · last synced {time}</Text>}
+            <Pressable onPress={sync} accessibilityRole="button" style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 8 }}>
+              <Text style={[s.mono, { color: c.ink2 }]}>{syncing ? "Syncing…" : "Sync"}</Text>
+            </Pressable>
+            <Pressable onPress={async () => { await clearCache(); setBundle(null); await supabase.auth.signOut(); }} accessibilityRole="button" style={{ minHeight: 44, justifyContent: "center", paddingLeft: 8 }}>
+              <Text style={[s.mono, { color: c.ink2, textDecorationLine: "underline", textDecorationColor: c.accentFill }]}>Log out</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
+
+      {session === undefined ? <View style={{ flex: 1, justifyContent: "center" }}><ActivityIndicator color={c.accentFill} /></View>
+        : !session ? <Login /> : (
+          <>
+            {!online && (
+              <View style={{ backgroundColor: c.panel, borderBottomWidth: 1, borderColor: c.line, paddingVertical: 8, paddingHorizontal: 20 }}>
+                <Text style={[s.label, { color: c.warn }]}>Offline · last synced {time}</Text>
+              </View>
+            )}
             <View style={{ flex: 1 }}>
               {!bundle ? (
-                <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 12 }}>
-                  {syncing || !syncError ? <><ActivityIndicator /><Text style={s.muted}>Loading your data…</Text></> : <>
-                    <Text style={{ color: C.must, textAlign: "center" }}>Couldn't load your data. Connect to the internet once to sync.{"\n"}{syncError}</Text>
-                    <Pressable onPress={sync} style={s.btn}><Text style={s.btnText}>Retry</Text></Pressable>
+                <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24, gap: 14 }}>
+                  {syncing || !syncError ? <><ActivityIndicator color={c.accentFill} /><Text style={s.italic}>Loading your data…</Text></> : <>
+                    <Text style={[s.body, { color: c.bad, textAlign: "center" }]}>Couldn't load your data. Connect to the internet once to sync.{"\n"}{syncError}</Text>
+                    <Pressable onPress={sync} style={s.btn} accessibilityRole="button"><Text style={s.btnText}>Retry</Text></Pressable>
                   </>}
                 </View>
-              )
-                : tab === "home" ? <Home b={bundle} />
+              ) : tab === "today" ? <Today b={bundle} go={setTab} />
                 : tab === "timetable" ? <Timetable b={bundle} />
                 : tab === "calendar" ? <Calendar b={bundle} />
+                : tab === "attendance" ? <Attendance b={bundle} />
                 : <Assistant b={bundle} go={setTab} />}
             </View>
-            <View style={{ flexDirection: "row", borderTopWidth: 1, borderColor: C.line, backgroundColor: C.card }}>
-              {TABS.map(([k, l]) => (
-                <Pressable key={k} onPress={() => setTab(k)} style={{ flex: 1, paddingVertical: 12, alignItems: "center" }}>
-                  <Text style={{ color: tab === k ? C.accent : C.muted, fontWeight: tab === k ? "800" : "500" }}>{l}</Text>
-                </Pressable>
-              ))}
+            <View style={{ flexDirection: "row", borderTopWidth: 1, borderColor: c.lineStrong, backgroundColor: c.bg }} accessibilityRole="tablist">
+              {TABS.map(([k, l]) => {
+                const active = tab === k;
+                return (
+                  <Pressable key={k} onPress={() => setTab(k)} accessibilityRole="tab" accessibilityState={{ selected: active }}
+                    style={{ flex: 1, minHeight: 56, alignItems: "center", justifyContent: "center", borderTopWidth: 2, borderColor: active ? c.accentFill : "transparent", backgroundColor: active ? c.panel : "transparent" }}>
+                    <Text style={{ fontFamily: active ? F.monoBold : F.mono, fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: active ? c.ink : c.muted }}>{l}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </>
         )}
-      </SafeAreaView>
+    </SafeAreaView>
+  );
+}
+
+export default function App() {
+  const [loaded] = useFonts({
+    PlayfairDisplay_600SemiBold, PlayfairDisplay_600SemiBold_Italic, PlayfairDisplay_700Bold, PlayfairDisplay_700Bold_Italic,
+    Newsreader_400Regular, Newsreader_400Regular_Italic, Newsreader_600SemiBold,
+    SpaceMono_400Regular, SpaceMono_700Bold,
+  });
+  if (!loaded) return null;
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <Shell />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

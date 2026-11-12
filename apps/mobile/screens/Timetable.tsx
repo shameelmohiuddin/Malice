@@ -1,28 +1,49 @@
-import { ScrollView, Text, View } from "react-native";
-import { addDays, parseHHMM, prettyDate, todayIST } from "@classpilot/core";
+import { useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { addDays, parseHHMM, prettyDate, shortName, todayIST, weekday } from "@classpilot/core";
 import type { Bundle } from "../lib/sync";
-import { C, s } from "./theme";
+import { Empty, Tag } from "./parts";
+import { F, useTheme } from "./theme";
 
 export function Timetable({ b }: { b: Bundle }) {
+  const { c, s } = useTheme();
   const today = todayIST();
-  const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
+  const [offset, setOffset] = useState(0);
+  const monday = addDays(addDays(today, -((weekday(today) + 6) % 7)), offset * 7);
+  const days = Array.from({ length: 6 }, (_, i) => addDays(monday, i));
+  const name = (code: string | null) => b.stats.find((x) => x.code === code)?.name ?? code ?? "";
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      <Text style={[s.h1, { marginBottom: 12 }]}>Next 7 days</Text>
-      {days.map((d) => {
-        const slots = b.timetable.filter((t) => t.date === d && t.courseCode).sort((a, x) => parseHHMM(a.start) - parseHHMM(x.start));
-        const ev = b.events.filter((e) => e.start <= d && e.end >= d);
+    <ScrollView contentContainerStyle={s.screen}>
+      <View style={{ gap: 6 }}>
+        <Text style={s.label}>Week of {prettyDate(monday)}</Text>
+        <Text style={s.display} accessibilityRole="header">Timetable</Text>
+      </View>
+      <View style={[s.row, { gap: 8 }]}>
+        {[["←", -1, "Previous week"], ["This week", 0, "This week"], ["→", 1, "Next week"]].map(([label, d, a]) => (
+          <Pressable key={String(a)} accessibilityRole="button" accessibilityLabel={String(a)} onPress={() => setOffset(d === 0 ? 0 : offset + (d as number))} style={[s.btnLine, { flex: d === 0 ? 2 : 1 }]}>
+            <Text style={s.btnLineText}>{label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {days.map((day) => {
+        const slots = b.timetable.filter((t) => t.date === day && t.courseCode).sort((a, x) => parseHHMM(a.start) - parseHHMM(x.start));
+        const ev = b.events.filter((e) => e.start <= day && e.end >= day);
+        const isToday = day === today;
         return (
-          <View key={d} style={s.card}>
-            <Text style={{ fontWeight: "700", color: C.ink, marginBottom: 6 }}>{prettyDate(d)}</Text>
-            {ev.map((e) => <Text key={e.id} style={{ color: e.isHoliday ? C.safe : C.accent, marginBottom: 4, textDecorationLine: e.cancelled ? "line-through" : "none" }}>{e.title}</Text>)}
-            {!slots.length && !ev.length && <Text style={s.muted}>No classes</Text>}
-            {slots.map((t) => (
-              <View key={t.start + t.courseCode} style={{ flexDirection: "row", gap: 8, paddingVertical: 4 }}>
-                <Text style={[s.muted, { width: 90 }]}>{t.start}–{t.end}</Text>
-                <Text style={{ flex: 1, color: t.cancelled ? C.muted : C.ink, textDecorationLine: t.cancelled ? "line-through" : "none" }}>
-                  {b.stats.find((x) => x.code === t.courseCode)?.name ?? t.courseCode}{t.extra ? "  · Extra" : ""}{t.cancelled ? "  · Cancelled" : ""}
-                </Text>
+          <View key={day} style={[s.folio, isToday && { borderWidth: 2, borderColor: c.accentFill }]}>
+            <View style={[s.band, { padding: 14, paddingBottom: 10 }]}>
+              <Text style={s.title}>{prettyDate(day)}</Text>
+              {isToday ? <Tag tone="ink">Today</Tag> : <Text style={s.label}>{slots.length} {slots.length === 1 ? "class" : "classes"}</Text>}
+            </View>
+            {ev.map((e) => <Text key={e.id} style={[s.body2, { paddingHorizontal: 14, paddingTop: 8, color: e.isHoliday ? c.ok : c.accent }, e.cancelled && { textDecorationLine: "line-through" }]}>{e.title}</Text>)}
+            {slots.length === 0 ? <View style={{ padding: 14 }}><Empty>No classes</Empty></View> : slots.map((t, i) => (
+              <View key={t.start + t.courseCode} style={[s.row, { paddingHorizontal: 14, paddingVertical: 11, opacity: t.cancelled ? 0.6 : 1 }, i > 0 && s.divider]}>
+                <Text style={[s.mono, { width: 86 }]}>{t.start}–{t.end}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.body, { fontFamily: F.serifBold }, t.cancelled && { textDecorationLine: "line-through" }]}>{shortName(name(t.courseCode))}</Text>
+                  <Text style={s.body2} numberOfLines={1}>{name(t.courseCode)}{t.room ? ` · ${t.room}` : ""}</Text>
+                </View>
+                {t.cancelled ? <Tag tone="bad">Cancelled</Tag> : t.extra ? <Tag tone="ink">Extra</Tag> : null}
               </View>
             ))}
           </View>
