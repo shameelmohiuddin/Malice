@@ -33,10 +33,8 @@ export default async function Attendance() {
                 <p className="text-ink-2">{v.name}</p>
               </div>
               <div className="plate p-4 flex items-end justify-between gap-4">
-                <div><p className="num text-[36px] font-bold leading-none">{v.percent.toFixed(1)}<span className="text-[18px] text-accent">%</span></p><p className="num text-[13px] text-ink-2 mt-1.5">{v.present} of {v.held} attended</p></div>
-                <p className={`text-right text-[17px] font-semibold leading-tight ${v.mustAttend > 0 ? "text-bad" : v.canSkip === 0 ? "text-warn" : "text-ok"}`}>
-                  {v.mustAttend > 0 ? `Attend the next ${v.mustAttend}` : v.canSkip === 0 ? "Don't skip the next one" : `Can skip ${v.canSkip} more`}
-                </p>
+                <p className="num text-[36px] font-bold leading-none">{v.percent.toFixed(1)}<span className="text-[18px] text-accent">%</span></p>
+                <p className="num text-[14px] text-ink-2">{v.present} of {v.held} attended</p>
               </div>
               <dl className="mono text-[12px] space-y-2">
                 <div className="flex justify-between gap-3"><dt className="text-muted">One more absence</dt><dd>{pctText(v.skipNext.before)} → <span className={v.skipNext.after < min * 100 ? "text-bad font-bold" : ""}>{pctText(v.skipNext.after)}</span></dd></div>

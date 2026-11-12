@@ -32,9 +32,7 @@ export function Attendance({ b }: { b: Bundle }) {
             </View>
             {[
               ["One more absence", `${pctText(v.skipNext.before)} → ${pctText(v.skipNext.after)}`, v.skipNext.after < min * 100],
-              ["Absences possible now", `${v.canSkip}${v.mustAttend ? ` · attend next ${v.mustAttend}` : ""}`, v.mustAttend > 0],
               ["Classes left", String(v.semester.remaining), false],
-              ["If you attend all", pctText(v.semester.finalIfAllAttended), false],
             ].map(([k, val, bad]) => (
               <View key={String(k)} style={[s.row, { justifyContent: "space-between" }]}>
                 <Text style={s.monoMuted}>{k}</Text>
