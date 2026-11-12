@@ -73,7 +73,7 @@ export const TEMPLATES: Record<ModelIntent, T[]> = {
     "what is my schedule {D}", "show {D} classes", "classes {D}", "what's on {D}", "do i have {S} {D}", "is there {S} class {D}",
     "how many classes {D}", "what time do classes start {D}", "when does college end {D}", "what time do i finish {D}",
     "first class {D}", "last class {D}", "what's my timetable {D}", "is there college {D}", "do we have lab {D}", "when is {S} {D}",
-    "what do i have at {T} {D}", "what class is at {T}", "which class is at {T} {D}", "what's at {T}", "full day schedule {D}", "show me the timetable for {D}", "show {D} schedule", "{D} schedule", "classes on {D}", "what is the last class {D}", "what's at {T} {D}", "list my classes {D}",
+    "what do i have at {T} {D}", "what class is at {T}", "which class is at {T} {D}", "what's at {T}", "full day schedule {D}", "{D}", "{D}?", "and {D}", "what about {D}", "show me the timetable for {D}", "show {D} schedule", "{D} schedule", "classes on {D}", "what is the last class {D}", "what's at {T} {D}", "list my classes {D}",
   ],
   free_time: [
     "when am i free {D}", "free periods {D}", "do i have any free period {D}", "when do i have free time {D}", "any gaps {D}",

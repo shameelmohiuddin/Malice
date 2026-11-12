@@ -69,7 +69,7 @@ export const intentModel = () => (model ??= loadModel(WEIGHTS));
 export const MIN_CONFIDENCE = 0.4;
 
 /** How a chip phrases each intent, so tapping it asks a question the model is sure about. */
-const PHRASE: Record<IntentKind, (subject?: string) => string> = {
+export const PHRASE: Record<IntentKind, (subject?: string) => string> = {
   attendance: (s) => (s ? `${s} attendance` : "What's my attendance?"),
   can_skip: (s) => `How many ${s ?? ""} classes can I skip?`.replace("  ", " "),
   cost_of_skip: (s) => `What if I skip ${s ?? "the next class"}?`,

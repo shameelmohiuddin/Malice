@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { classify, extractTime, intentModel } from "../src/assistant/intents";
 import { ask } from "../src/assistant/answer";
 import { maskTokens } from "../src/assistant/model/featurize";
@@ -130,5 +130,30 @@ describe("found in the pre-merge test pass", () => {
   });
   it("the all-subjects skip list says what the numbers mean", () => {
     expect(ask("how many classes can i skip overall", D, T).text.split("\n")[0]).toBe("Classes you can still skip and stay at 75%:");
+  });
+});
+
+describe("Did you mean", () => {
+  it("offers two guesses when the model is unsure", () => {
+    const unsure = vi.spyOn(intentModel(), "predict").mockReturnValue({
+      intent: "room", confidence: 0.3, known: true,
+      ranked: [{ intent: "room", p: 0.3 }, { intent: "instructor", p: 0.28 }, { intent: "exams", p: 0.1 }],
+    });
+    expect(classify("dbms thing", C, T)).toEqual({ clarify: "Did you mean:", options: ["Which room is Database Management Systems?", "Who teaches Database Management Systems?"] });
+    unsure.mockRestore();
+  });
+  it("every chip it can offer is understood confidently as that intent", async () => {
+    const { PHRASE, MIN_CONFIDENCE } = await import("../src/assistant/intents");
+    for (const [intent, phrase] of Object.entries(PHRASE)) {
+      if (intent === "out_of_scope" || intent === "open_section" || intent === "open_classroom") continue;
+      for (const q of [phrase(), phrase("Database Management Systems")]) {
+        const r = classify(q, C, T);
+        expect("kind" in r ? r.kind : r.clarify, q).toBe(intent);
+        expect("confidence" in r ? r.confidence! : 1, q).toBeGreaterThanOrEqual(MIN_CONFIDENCE);
+      }
+    }
+  });
+  it("a bare date asks for that day's classes", () => {
+    expect(classify("tomorrow", C, T)).toMatchObject({ kind: "day_schedule", date: "2026-11-13" });
   });
 });
