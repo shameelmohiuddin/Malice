@@ -15,9 +15,9 @@ export const adminSyncStore = (): SyncStore => {
       const { data } = await db.from("erp_credentials").select("usn,ciphertext,iv,tag").eq("user_id", userId).maybeSingle();
       return data;
     },
-    async upsert(table, rows, onConflict) {
+    async upsert(table, rows, onConflict, opts) {
       for (let i = 0; i < rows.length; i += 500) {
-        const { error } = await db.from(table).upsert(rows.slice(i, i + 500), { onConflict });
+        const { error } = await db.from(table).upsert(rows.slice(i, i + 500), { onConflict, ignoreDuplicates: opts?.ignoreDuplicates ?? false });
         if (error) throw new Error(`${table}: ${error.message}`);
       }
     },

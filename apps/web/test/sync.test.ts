@@ -43,3 +43,10 @@ it("successful sync clears future timetable before re-inserting it", async () =>
   const order = [(s.deleteFutureTimetable as any).mock.invocationCallOrder[0], ...(s.upsert as any).mock.calls.map((_: any, i: number) => (s.upsert as any).mock.invocationCallOrder[i])];
   expect(order[0]).toBeLessThan(Math.max(...order.slice(1)));
 });
+
+it("sync never overwrites existing course titles", async () => {
+  const s = store(false);
+  await syncUser("u1", s, { snapshot: true, today: "2026-11-12" });
+  const call = (s.upsert as any).mock.calls.find((c: any[]) => c[0] === "courses");
+  expect(call[3]).toEqual({ ignoreDuplicates: true });
+});

@@ -6,7 +6,7 @@ import { todayIST, type TemplateSlot } from "@classpilot/core";
 
 export type SyncStore = {
   getCreds(userId: string): Promise<(Sealed & { usn: string }) | null>;
-  upsert(table: string, rows: Record<string, unknown>[], onConflict: string): Promise<void>;
+  upsert(table: string, rows: Record<string, unknown>[], onConflict: string, opts?: { ignoreDuplicates?: boolean }): Promise<void>;
   setStatus(userId: string, s: { ok: boolean; error?: string }): Promise<void>;
   deleteFutureTimetable(userId: string, fromDate: string): Promise<void>;
   getTemplate?(section: string): Promise<TemplateSlot[]>;
@@ -40,7 +40,8 @@ export const syncUser = async (
   const template = (await store.getTemplate?.(raw.student.section)) ?? [];
   const m = mapErp(raw, today, template);
   // Upserts only: a failed or partial sync never deletes existing data.
-  await store.upsert("courses", m.courses.map((c) => ({ code: c.code, name: c.name })), "code");
+  // Insert-only: curated titles (from the timetable sheet) are never overwritten by the ERP's names.
+  await store.upsert("courses", m.courses.map((c) => ({ code: c.code, name: c.name })), "code", { ignoreDuplicates: true });
   await store.upsert("attendance_logs", m.logs.map((l) => ({ user_id: userId, erp_log_id: l.erpLogId, course_code: l.courseCode, date: l.date, start: l.start, end: l.end, status: l.status })), "user_id,erp_log_id");
   // The fetch succeeded, so it is safe to drop projected future rows that may have moved.
   await store.deleteFutureTimetable(userId, today);
