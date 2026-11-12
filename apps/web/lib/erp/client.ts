@@ -27,14 +27,19 @@ export const erpLogin = async (usn: string, password: string): Promise<string> =
   return browserLogin(usn, password);
 };
 
+/** The small part of Playwright the fallback login uses (it is an optional dependency, loaded at runtime). */
+type PwRequest = { url(): string; headers(): Record<string, string> };
+type PwPage = { on(event: "request", cb: (r: PwRequest) => void): void; goto(url: string): Promise<unknown>; fill(sel: string, value: string): Promise<void>; click(sel: string): Promise<void> };
+type Playwright = { chromium: { launch(): Promise<{ newPage(): Promise<PwPage>; close(): Promise<void> }> } };
+
 const browserLogin = async (usn: string, password: string): Promise<string> => {
-  let pw: any;
+  let pw: Playwright;
   const mod = "playwright";
   try { pw = await import(/* webpackIgnore: true */ mod); } catch { throw new ErpDownError("Direct login is disabled on the ERP and the browser fallback isn't installed"); }
   const browser = await pw.chromium.launch();
   try {
     const page = await browser.newPage();
-    const token = new Promise<string>((resolve) => page.on("request", (r: any) => {
+    const token = new Promise<string>((resolve) => page.on("request", (r) => {
       const a = r.headers()["authorization"];
       if (r.url().includes("/academics-api/") && a?.startsWith("Bearer ")) resolve(a.slice(7));
     }));

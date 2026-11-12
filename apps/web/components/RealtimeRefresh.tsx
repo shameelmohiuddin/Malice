@@ -21,7 +21,7 @@ export function RealtimeRefresh() {
       ch = sb.channel("live");
       for (const table of ["schedule_overrides", "events", "deadlines"])
         ch.on("postgres_changes", { event: "*", schema: "public", table }, () => router.refresh());
-      ch.subscribe((status) => { (window as any).__realtime = status; });
+      ch.subscribe((status) => { (window as unknown as { __realtime?: string }).__realtime = status; });
     })();
     const { data: sub } = sb.auth.onAuthStateChange((_e, s) => { if (s) sb.realtime.setAuth(s.access_token); });
     return () => { cancelled = true; sub.subscription.unsubscribe(); if (ch) sb.removeChannel(ch); };

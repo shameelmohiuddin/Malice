@@ -45,7 +45,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
               <SectionHead index="01" id="day-h" title={prettyDate(date)} meta={`${classes.length} classes`} />
               {classes.length === 0 ? <div className="plate p-5"><Empty>No classes on this day.</Empty></div> : (
                 <ul className="folio divide-y divide-line">
-                  {classes.map((c: any) => (
+                  {classes.map((c) => (
                     <li key={c.start + c.courseCode} className="px-4 py-3 flex items-center gap-4">
                       <span className="mono text-[12px] w-[96px] shrink-0">{c.start}–{c.end}</span>
                       <span className="min-w-0 flex-1">
@@ -55,7 +55,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
                       {c.extra && <span className="tag tag-ink">Extra</span>}
                       {(date < todayIST() || (date === todayIST() && parseHHMM(c.end) <= nowMinutesIST())) && !c.cancelled
                         ? <span className="tag">Done</span>
-                        : c.cancelled || c.extra
+                        : (c.cancelled || c.extra) && c.overrideId
                         ? <form action={undoOverride.bind(null, c.overrideId)}><button className="btn btn-line">Undo</button></form>
                         : <form action={cancelClass.bind(null, section, c.courseCode, date, c.start, c.end)}><button className="btn btn-bad">Cancel</button></form>}
                     </li>

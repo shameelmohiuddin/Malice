@@ -3,6 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ask, HELP, isClassroomUrl, nowMinutesIST, todayIST, type AssistantData } from "@classpilot/core";
 
+/** The Web Speech API isn't in TypeScript's DOM types yet; this is the part the voice button uses. */
+type Recognition = {
+  lang: string; interimResults: boolean; maxAlternatives: number;
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onend: (() => void) | null; onerror: (() => void) | null; start(): void; stop(): void;
+};
+const speechRecognition = (): (new () => Recognition) | undefined => {
+  const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition;
+};
+
 type Msg = { from: "me" | "bot"; text: string; options?: string[]; retry?: string };
 
 /** Ask from anywhere on the page: window.dispatchEvent(new CustomEvent("cp:ask", { detail: "text" })). */
@@ -17,7 +28,7 @@ export function Assistant({ data }: { data: AssistantData }) {
   const router = useRouter();
   const end = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const recRef = useRef<any>(null);
+  const recRef = useRef<Recognition | null>(null);
   const dataRef = useRef(data);
   dataRef.current = data;
 
@@ -33,7 +44,7 @@ export function Assistant({ data }: { data: AssistantData }) {
   const sendRef = useRef(send);
   sendRef.current = send;
 
-  useEffect(() => { setVoiceOK(!!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)); }, []);
+  useEffect(() => { setVoiceOK(!!speechRecognition()); }, []);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [msgs, open]);
   useEffect(() => { if (open) input.current?.focus(); }, [open]);
   useEffect(() => {
@@ -45,12 +56,12 @@ export function Assistant({ data }: { data: AssistantData }) {
   }, []);
 
   const listen = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SR = speechRecognition();
     if (!SR) return;
     if (listening) { recRef.current?.stop(); return; }
     const rec = new SR();
     rec.lang = "en-IN"; rec.interimResults = false; rec.maxAlternatives = 1;
-    rec.onresult = (e: any) => send(e.results[0][0].transcript);
+    rec.onresult = (e) => send(e.results[0][0].transcript);
     rec.onend = () => setListening(false);
     rec.onerror = () => setListening(false);
     recRef.current = rec; setListening(true); rec.start();

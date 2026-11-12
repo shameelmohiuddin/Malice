@@ -16,7 +16,7 @@ export default function Login() {
           <p className="display text-[64px] mt-4 max-w-xl" style={{ color: "var(--bg)" }}>Your timetable, attendance and deadlines in <em>one place</em>.</p>
           <div className="rule-double mt-10 max-w-md" style={{ borderColor: "rgb(255 255 255 / .4)" }} />
           <ul className="mono text-[12px] mt-6 space-y-2 opacity-80">
-            <li>Today's classes, with changes your teachers make</li>
+            <li>Today&apos;s classes, with changes your teachers make</li>
             <li>Deadlines turned into a study plan</li>
             <li>The academic calendar, holidays and events</li>
             <li>An assistant that answers from your own data</li>

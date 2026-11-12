@@ -30,7 +30,7 @@ export default async function Timetable({ searchParams }: { searchParams: Promis
         <div>
           <p className="label mb-3">Week of {prettyDate(monday)} · Section {d.profile.section ?? "—"}</p>
           <h1 id="tt-h" className="display text-[38px] md:text-[56px]">Timetable</h1>
-          <p className="mt-2 text-ink-2 text-[17px]">{classes} classes this week · official MITE timetable, ERP sessions and teachers' changes{d.advisor ? ` · Class advisor ${d.advisor}` : ""}</p>
+          <p className="mt-2 text-ink-2 text-[17px]">{classes} classes this week · official MITE timetable, ERP sessions and teachers&apos; changes{d.advisor ? ` · Class advisor ${d.advisor}` : ""}</p>
         </div>
         <nav aria-label="Week" className="flex gap-2 w-full sm:w-auto [&>a]:flex-1 sm:[&>a]:flex-none">
           <Link className="btn btn-line" href={`/timetable?week=${addDays(monday, -7)}`} aria-label="Previous week">←<span className="hidden sm:inline"> Previous</span></Link>

@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import type { SyncStore } from "@/lib/erp/sync";
+import type { TemplateSlot } from "@classpilot/core";
 
 export const supabaseAdmin = () => {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -27,7 +28,7 @@ export const adminSyncStore = (): SyncStore => {
     },
     async getTemplate(section) {
       const { data } = await db.from("section_timetable").select("weekday,start,end,options,kind,room").eq("section", section);
-      return (data ?? []) as any;
+      return (data ?? []) as TemplateSlot[];
     },
     async deleteFutureTimetable(userId, fromDate) {
       const { error } = await db.from("timetable").delete().eq("user_id", userId).gte("date", fromDate);

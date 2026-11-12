@@ -25,6 +25,8 @@ export const getSession = async (): Promise<Ctx> => {
   return ctx;
 };
 
+// Supabase rows are untyped here (no generated database types); the to* mappers below give them shape.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
 export const toSlot = (r: Row): TimetableSlot => ({ date: r.date, start: r.start, end: r.end, courseCode: r.course_code, kind: r.kind, room: r.room, cancelled: r.cancelled, extra: false });
 export const toOverride = (r: Row): ScheduleOverride => ({ id: r.id, courseCode: r.course_code, date: r.date, start: r.start, end: r.end, action: r.action, room: r.room });

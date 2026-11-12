@@ -19,10 +19,16 @@ const sectionDay = async (sb: Ctx["supabase"], section: string, date: string) =>
   const extras = (ov.data ?? []).filter((o) => o.action === "extra");
   return { classes, extras, cancelled };
 };
+/** One class on the teacher's day list: a timetabled class (cancellable) or an extra class (undoable). */
+export type DayClass = {
+  date: string; start: string; end: string; courseCode: string; courseName: string; room: string | null;
+  cancelled: boolean; overrideId: string | null; extra?: boolean;
+};
+
 const staff = (ctx: Ctx) => { requireStaff(ctx.profile?.role); return { sb: ctx.supabase, uid: ctx.user.id }; };
 
 export const teacher = {
-  async dayClasses(ctx: Ctx, section: string, date: string) {
+  async dayClasses(ctx: Ctx, section: string, date: string): Promise<DayClass[]> {
     const { sb } = staff(ctx);
     if (!isISODate(date)) throw new ValidationError("Invalid date");
     const [tt, ov, courses] = await Promise.all([
@@ -32,11 +38,11 @@ export const teacher = {
     ]);
     const seen = new Set<string>();
     return (tt.data ?? []).filter((t) => { const k = t.start + t.course_code; if (seen.has(k)) return false; seen.add(k); return true; })
-      .map((t) => {
+      .map((t): DayClass => {
         const cancel = ov.data?.find((o) => o.action === "cancel" && o.start === t.start && o.course_code === t.course_code);
         return { date, start: t.start, end: t.end, courseCode: t.course_code, courseName: courses.data?.find((c) => c.code === t.course_code)?.name ?? t.course_code, room: t.room, cancelled: !!cancel, overrideId: cancel?.id ?? null };
       })
-      .concat((ov.data ?? []).filter((o) => o.action === "extra").map((o) => ({ date, start: o.start, end: o.end, courseCode: o.course_code, courseName: courses.data?.find((c) => c.code === o.course_code)?.name ?? o.course_code, room: o.room, cancelled: false, overrideId: o.id, extra: true } as any)))
+      .concat((ov.data ?? []).filter((o) => o.action === "extra").map((o) => ({ date, start: o.start, end: o.end, courseCode: o.course_code, courseName: courses.data?.find((c) => c.code === o.course_code)?.name ?? o.course_code, room: o.room, cancelled: false, overrideId: o.id, extra: true })))
       .sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
   },
   async cancelClass(ctx: Ctx, input: unknown) {
