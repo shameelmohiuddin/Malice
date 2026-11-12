@@ -1,0 +1,28 @@
+import "server-only";
+import { createClient } from "@supabase/supabase-js";
+import type { SyncStore } from "@/lib/erp/sync";
+
+export const supabaseAdmin = () => {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set in .env.local");
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, { auth: { persistSession: false } });
+};
+
+export const adminSyncStore = (): SyncStore => {
+  const db = supabaseAdmin();
+  return {
+    async getCreds(userId) {
+      const { data } = await db.from("erp_credentials").select("usn,ciphertext,iv,tag").eq("user_id", userId).maybeSingle();
+      return data;
+    },
+    async upsert(table, rows, onConflict) {
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await db.from(table).upsert(rows.slice(i, i + 500), { onConflict });
+        if (error) throw new Error(`${table}: ${error.message}`);
+      }
+    },
+    async setStatus(userId, s) {
+      await db.from("erp_credentials").update({ last_sync: new Date().toISOString(), last_error: s.error ?? null }).eq("user_id", userId);
+    },
+  };
+};

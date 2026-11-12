@@ -5,7 +5,7 @@ export type LogRow = { erpLogId: number; courseCode: string; date: string; start
 export type Mapped = {
   courses: { code: string; name: string }[];
   logs: LogRow[];
-  timetable: (TimetableSlot & { erpEntryId: number | null })[];
+  timetable: (TimetableSlot & { erpEntryId: number | null; section: string })[];
   events: (CalendarEvent & { erpEventId: number })[];
   stats: CourseStats[];
   semester: { start: string; end: string };

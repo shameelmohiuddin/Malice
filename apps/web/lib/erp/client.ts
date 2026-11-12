@@ -26,12 +26,13 @@ export const erpLogin = async (usn: string, password: string): Promise<string> =
 };
 
 const browserLogin = async (usn: string, password: string): Promise<string> => {
-  let pw: typeof import("playwright");
-  try { pw = await import("playwright"); } catch { throw new ErpDownError("Direct login is disabled on the ERP and the browser fallback isn't installed"); }
+  let pw: any;
+  const mod = "playwright";
+  try { pw = await import(/* webpackIgnore: true */ mod); } catch { throw new ErpDownError("Direct login is disabled on the ERP and the browser fallback isn't installed"); }
   const browser = await pw.chromium.launch();
   try {
     const page = await browser.newPage();
-    const token = new Promise<string>((resolve) => page.on("request", (r) => {
+    const token = new Promise<string>((resolve) => page.on("request", (r: any) => {
       const a = r.headers()["authorization"];
       if (r.url().includes("/academics-api/") && a?.startsWith("Bearer ")) resolve(a.slice(7));
     }));
