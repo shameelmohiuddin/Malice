@@ -10,10 +10,12 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 body { background: var(--bg); color: var(--ink); }
-* { transition-duration: 120ms; }
+
+@layer components {
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
 .btn { display:inline-flex; align-items:center; gap:.4rem; border-radius: 10px; padding: .5rem .9rem; font-weight: 600; font-size: .875rem; background: var(--accent); color: white; }
 .btn:disabled { opacity: .5 }
 .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
 .input { width:100%; border:1px solid var(--line); background: var(--card); border-radius:10px; padding:.55rem .75rem; font-size:.9rem; }
 .label { font-size:.75rem; font-weight:600; color: var(--muted); text-transform: uppercase; letter-spacing:.04em; }
+}
