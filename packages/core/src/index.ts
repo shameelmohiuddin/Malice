@@ -6,3 +6,4 @@ export * from "./assistant/subjects";
 export * from "./assistant/intents";
 export * from "./assistant/answer";
 export * from "./planner";
+export * from "./view";

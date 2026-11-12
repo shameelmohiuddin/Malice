@@ -6,12 +6,23 @@ import type { Role } from "@/lib/roles";
 
 export type Profile = { id: string; name: string | null; role: Role; section: string | null; min_attendance: number };
 
-export const getSession = async () => {
+type Supa = Awaited<ReturnType<typeof supabaseServer>>;
+export type Ctx = { supabase: Supa; user: { id: string; email?: string }; profile: Profile };
+
+/** Current user + profile, or null when logged out (for API routes). */
+export const getContext = async (): Promise<Ctx | null> => {
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) return null;
   const { data: profile } = await supabase.from("profiles").select("id,name,role,section,min_attendance").eq("id", user.id).single();
   return { supabase, user, profile: profile as Profile };
+};
+
+/** Same, but redirects to /login (for pages). */
+export const getSession = async (): Promise<Ctx> => {
+  const ctx = await getContext();
+  if (!ctx) redirect("/login");
+  return ctx;
 };
 
 type Row = Record<string, any>;
@@ -25,8 +36,9 @@ export type StudentData = Omit<AssistantData, "deadlines"> & {
   deadlines: (Deadline & { scope: string })[]; lastSync: string | null; lastError: string | null; hasCreds: boolean;
 };
 
-export const loadStudentData = async (): Promise<StudentData> => {
-  const { supabase, user, profile } = await getSession();
+export const loadStudentData = async (): Promise<StudentData> => loadStudentDataFor(await getSession());
+
+export const loadStudentDataFor = async ({ supabase, user, profile }: Ctx): Promise<StudentData> => {
   const today = todayIST();
   const section = profile.section ?? "5CS3";
   const [stats, courses, tt, ov, ev, dl, creds] = await Promise.all([

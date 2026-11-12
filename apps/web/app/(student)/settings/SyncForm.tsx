@@ -11,7 +11,7 @@ export function SyncForm({ hasCreds }: { hasCreds: boolean }) {
     const r = await fetch("/api/erp/sync", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body ?? {}) });
     const j = await r.json();
     setBusy(false);
-    setMsg(j.ok ? { ok: true, text: `Synced: ${j.counts.logs} attendance records, ${j.counts.timetable} timetable slots, ${j.counts.events} events.` } : { ok: false, text: j.message });
+    setMsg(j.ok ? { ok: true, text: `Synced: ${j.counts.logs} attendance records, ${j.counts.timetable} timetable slots, ${j.counts.events} events.` } : { ok: false, text: j.message ?? "Sync failed" });
     if (j.ok) router.refresh();
   };
   return (

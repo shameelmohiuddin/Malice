@@ -3,6 +3,9 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { adminSyncStore, supabaseAdmin } from "@/lib/supabase/admin";
 import { encrypt } from "@/lib/crypto";
 import { syncUser } from "@/lib/erp/sync";
+import { syncCooldownLeft } from "@bunk/core";
+
+const COOLDOWN_SEC = 60;
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -25,7 +28,9 @@ export async function POST(req: Request) {
       }
       return NextResponse.json(r, { status: r.ok ? 200 : 400 });
     }
-    const { data: creds } = await admin.from("erp_credentials").select("user_id").eq("user_id", user.id).maybeSingle();
+    const { data: creds } = await admin.from("erp_credentials").select("user_id,last_sync").eq("user_id", user.id).maybeSingle();
+    const wait = syncCooldownLeft(creds?.last_sync ?? null, new Date(), COOLDOWN_SEC);
+    if (creds && wait > 0) return NextResponse.json({ ok: false, error: "RATE_LIMITED", message: `Synced just now. Try again in ${wait}s.` }, { status: 429 });
     const r = await syncUser(user.id, adminSyncStore(), { snapshot: process.env.DEMO_SNAPSHOT === "1" && !creds });
     return NextResponse.json(r, { status: r.ok ? 200 : 400 });
   } catch (e) {
