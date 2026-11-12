@@ -127,3 +127,24 @@ I re-ran the main checks on the current build (the editorial frontend plus the o
 | R7 | Desktop nav labels wrapped onto two lines | Labels stay on one line, and the name is hidden at mid widths |
 | R8 | Class-wide deadlines were readable by every section | Database rule limits them to their own section (migration `0005`; **it still has to be applied to the live project**) |
 | R9 | Each sync overwrote the curated course titles with the ERP's names | Sync only adds new course codes |
+
+---
+
+# Round 3: ClassPilot's own assistant model (branch `feat/assistant-model`, 12 Nov 2026)
+
+These tests ran against the live 5CS3 data before the merge.
+
+| Area | Result |
+|---|---|
+| Blind test: 50 new questions written after training | 46/50 on the first run. 2 were real bugs ("monday's" not read as a date; "who is the cm of karnataka" treated as a subject), now fixed and re-checked with new variants. The other 2 were correct answers my checker misscored. |
+| Assistant numbers vs the dashboard API (attendance, can skip, one more absence, projection, overall; all 8 subjects) | 33/33 match |
+| Edge and hostile input (empty, 300/301 chars, non-JSON, HTML, SQL, "open javascript:", "go to evil.com", Kannada, emoji, all caps) | All safe. Bad input gets a 400, and nothing navigates. 2 bugs found and fixed: "yesterday" ignored; dates past the loaded six weeks reported as "no classes" |
+| Panel UI at 375 px: clarify chips, follow-up, layout, tap targets | Pass |
+| "Did you mean" chips | A deterministic test checks every chip is understood confidently as its own intent |
+| All student pages and APIs; teacher endpoints as a student | Pages render with no errors, NaN or overflow. APIs return 200. Teacher endpoints return 403 |
+| Speed | Model loads in 34 ms; a full answer takes 0.17 ms on average |
+| Automated tests | 67 core and 18 web pass. Web, mobile and core type-check |
+| Production build | Compiles, type-checks and generates all 26 routes. **`next build` fails on 15 lint errors that are already on `main`** (`any` types, unescaped apostrophes) in files this branch doesn't change |
+| Android release bundle | Builds, and includes the model and the new answers |
+
+Known limits: English only, so Hinglish or Kannada gets a guess or the help list. "How many classes did I *miss*" reads as "skip". An impossible date like "45th" is ignored.
