@@ -44,7 +44,7 @@ export const maskTokens = (text: string, courses: Course[]): string[] => {
   for (const t of normalize(pre)) {
     const m = t === TIME || t === DATE ? t
       : exact.has(t) || (t.length >= 5 && fuzzy.some((w) => levenshtein(t, w) <= 1)) ? SUBJ
-      : DATE_WORDS.has(t) ? DATE
+      : DATE_WORDS.has(t) || DATE_WORDS.has(t.replace(/(day)s$/, "$1")) ? DATE
       : /^\d+$/.test(t) ? NUM
       : t;
     if (out[out.length - 1] !== m || !m.startsWith("x")) out.push(m);

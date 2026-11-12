@@ -81,6 +81,9 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
   const min = data.min ?? 0.75;
   const stat = intent.subject ? data.stats.find((s) => s.code === intent.subject) : undefined;
   const label = stat ? labelFor(stat, text) : "";
+  // The timetable only covers a window (about six weeks ahead); past it, "no classes" would be a guess.
+  const lastDay = data.timetable.reduce((m, t) => (t.date > m ? t.date : m), today);
+  const beyond = (d?: string) => (d && d > lastDay ? { text: `I can only see the timetable up to ${prettyDate(lastDay)}. Check the Timetable page closer to the date.` } : null);
   const nameOf = (code: string | null) => data.stats.find((s) => s.code === code)?.name ?? (code ? data.names?.[code] : undefined) ?? code ?? "Class";
 
   switch (intent.kind) {
@@ -93,7 +96,7 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
     }
     case "can_skip": {
       if (stat) return { text: canSkipLine(stat, label, data.stats, min) };
-      return { text: data.stats.map((s) => `• ${s.name}: ${safeToMiss(s.present, s.held, min)}`).join("\n") };
+      return { text: ["Classes you can still skip and stay at " + Math.round(min * 100) + "%:", ...data.stats.map((s) => `• ${s.name}: ${safeToMiss(s.present, s.held, min)}`)].join("\n") };
     }
     case "cost_of_skip": {
       if (!stat) return { text: "Which subject?", options: data.stats.map((s) => s.name) };
@@ -102,6 +105,7 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
     }
     case "should_skip_day": {
       const date = intent.date ?? today;
+      const far = beyond(date); if (far) return far;
       const slots = data.timetable
         .filter((t) => t.date === date && t.courseCode && !t.cancelled && (!intent.subject || t.courseCode === intent.subject))
         .sort((a, b) => parseHHMM(a.start) - parseHHMM(b.start));
@@ -126,6 +130,7 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
     }
     case "day_schedule": {
       const date = intent.date ?? today;
+      const far = beyond(date); if (far) return far;
       const all = data.timetable.filter((t) => t.date === date && t.courseCode).sort((a, b) => parseHHMM(a.start) - parseHHMM(b.start));
       if (intent.time !== undefined) {
         const at = all.find((t) => parseHHMM(t.start) <= intent.time! && parseHHMM(t.end) > intent.time!);
@@ -140,6 +145,7 @@ export const answer = (intent: Intent, data: AssistantData, today: string, nowMi
     }
     case "free_time": {
       const date = intent.date ?? today;
+      const far = beyond(date); if (far) return far;
       const busy = data.timetable.filter((t) => t.date === date && t.courseCode && !t.cancelled)
         .map((t) => [parseHHMM(t.start), parseHHMM(t.end)] as const).sort((a, b) => a[0] - b[0]);
       if (!busy.length) return { text: `No classes on ${prettyDate(date)}, so you're free all day.` };

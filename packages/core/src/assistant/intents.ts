@@ -24,8 +24,9 @@ export const extractDate = (tokens: string[], today: string): string | undefined
   if (/\bday after tomorrow\b/.test(s)) return addDays(today, 2);
   if (tokens.includes("tomorrow") || tokens.includes("tmrw") || tokens.includes("tmr")) return addDays(today, 1);
   if (tokens.includes("today") || tokens.includes("tonight")) return today;
+  if (tokens.includes("yesterday")) return addDays(today, -1);
   for (const t of tokens) {
-    let wd = WEEKDAYS.indexOf(t);
+    let wd = WEEKDAYS.indexOf(t.replace(/(day)s$/, "$1")); // "monday's" normalises to "mondays"
     if (wd < 0) wd = SHORT_DAYS.indexOf(t);
     if (wd >= 0) return wd === weekday(today) && !/\bnext\b/.test(s) ? today : nextWeekday(today, wd);
   }

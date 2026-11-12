@@ -73,7 +73,7 @@ export const TEMPLATES: Record<ModelIntent, T[]> = {
     "what is my schedule {D}", "show {D} classes", "classes {D}", "what's on {D}", "do i have {S} {D}", "is there {S} class {D}",
     "how many classes {D}", "what time do classes start {D}", "when does college end {D}", "what time do i finish {D}",
     "first class {D}", "last class {D}", "what's my timetable {D}", "is there college {D}", "do we have lab {D}", "when is {S} {D}",
-    "what do i have at {T} {D}", "what class is at {T}", "which class is at {T} {D}", "what's at {T}", "full day schedule {D}", "{D} schedule", "classes on {D}", "what is the last class {D}", "what's at {T} {D}", "list my classes {D}",
+    "what do i have at {T} {D}", "what class is at {T}", "which class is at {T} {D}", "what's at {T}", "full day schedule {D}", "show me the timetable for {D}", "show {D} schedule", "{D} schedule", "classes on {D}", "what is the last class {D}", "what's at {T} {D}", "list my classes {D}",
   ],
   free_time: [
     "when am i free {D}", "free periods {D}", "do i have any free period {D}", "when do i have free time {D}", "any gaps {D}",
@@ -138,7 +138,7 @@ export const TEMPLATES: Record<ModelIntent, T[]> = {
     "solve this question", "what is tcp", "explain {S}", "who won the match", "teach me {S}", "what is 2 plus 2", "give me notes for {S}",
     "what is the capital of india", "recommend a movie", "write a poem", "what is an automaton", "how to cook maggi",
     "translate this to kannada", "what is the meaning of life", "summarize chapter 3 of {S}", "important questions for {S}",
-    "previous year papers {S}", "how to score good marks in {S}", "what is the weather", "weather tomorrow", "what is 5 times 6", "translate hello", "who is the prime minister", "play a song", "write code for {S}",
+    "previous year papers {S}", "how to score good marks in {S}", "what is the weather", "weather tomorrow", "what is 5 times 6", "translate hello", "who is the prime minister", "play a song", "write code for {S}", "who is the cm of karnataka", "who is the president of india", "who is the ceo of google", "who invented the computer", "who is virat kohli", "who won the world cup", "who is the principal of harvard",
   ],
 };
 

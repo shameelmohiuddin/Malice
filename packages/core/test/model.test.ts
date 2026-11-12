@@ -113,3 +113,22 @@ describe("exam questions name the right exam", () => {
 it("a room question for a day without that class says which day", () => {
   expect(ask("where is fsd on saturday", D, T).text).toBe("No FSD classes on Sat 14 Nov.");
 });
+
+describe("found in the pre-merge test pass", () => {
+  it("possessive weekdays are dates", () => {
+    expect(classify("show me friday's timetable", C, T)).toMatchObject({ kind: "day_schedule", date: "2026-11-13" });
+  });
+  it("yesterday is a date", () => {
+    expect(classify("what classes did i have yesterday", C, T)).toMatchObject({ date: "2026-11-11" });
+  });
+  it("dates past the loaded timetable are not reported as free days", () => {
+    expect(ask("what classes do i have on 30 dec", D, T).text).toBe("I can only see the timetable up to Fri 13 Nov. Check the Timetable page closer to the date.");
+    expect(ask("can i skip on 30 dec", D, T).text).toContain("I can only see the timetable up to");
+  });
+  it("general-knowledge questions are declined, not mistaken for subjects", () => {
+    expect(ask("who is the governor of kerala", D, T).text).toBe("I can only help with your classes, attendance, deadlines and events.");
+  });
+  it("the all-subjects skip list says what the numbers mean", () => {
+    expect(ask("how many classes can i skip overall", D, T).text.split("\n")[0]).toBe("Classes you can still skip and stay at 75%:");
+  });
+});
